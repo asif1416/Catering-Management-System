@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { StaticImageData } from "next/image";
 
 interface MenuItem {
   id: number;
@@ -11,21 +12,25 @@ interface MenuItem {
 
 interface FoodCardsProps {
   cards: MenuItem[];
+  images: { src: string | StaticImageData; alt: string }[];
+
 }
 
-export default function FoodCards({ cards }: FoodCardsProps) {
+
+export default function MenuCards
+({ cards, images }: FoodCardsProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto"
         style={{ maxHeight: '820px' }} 
       >
-        {cards.map((card) => ( 
+        {cards.map((card, index) => (  
           <div key={card.id} className="bg-white rounded-lg shadow-md overflow-hidden">
             <div className="relative h-48">
               <Image
-                src={`/placeholder.svg?height=300&width=400&text=${encodeURIComponent(card.name)}`}
-                alt={card.name}
+                src={images[index]?.src || '/placeholder.svg'}  
+                alt={images[index]?.alt || "Menu Item Image"} 
                 layout="fill"
                 objectFit="cover"
               />

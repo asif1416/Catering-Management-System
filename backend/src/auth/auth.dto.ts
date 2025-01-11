@@ -1,7 +1,7 @@
 import {
   IsEmail,
+  IsInt,
   IsNotEmpty,
-  IsNumber,
   IsString,
   Length,
   Matches,
@@ -10,7 +10,7 @@ import {
 export class AuthDto {
   @IsNotEmpty({ message: 'Name is required.' })
   @IsString({ message: 'Name must be a string.' })
-  @Length(1, 5, { message: 'Name length must be at least 4 letters.' })
+  @Length(4, 50, { message: 'Name length must be at least 4 letters.' })
   name: string;
 
   @IsNotEmpty({ message: 'Email is required.' })
@@ -42,7 +42,7 @@ export class VerifyOtpDto {
   @IsEmail()
   email: string;
 
-  @IsNumber()
+  @IsInt()
   otp: number;
 }
 

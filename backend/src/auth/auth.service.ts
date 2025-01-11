@@ -130,7 +130,7 @@ export class AuthService {
       );
     }
 
-    const otpInterval =  15 * 1000;
+    const otpInterval =  60 * 1000;
     if (currentTime - lastResetTime < otpInterval) {
       const timeLeft = Math.ceil(
         (otpInterval - (currentTime - lastResetTime)) / 1000,
@@ -156,7 +156,11 @@ export class AuthService {
 
     await this.customerRepository.save(customer);
 
-    await this.sendMail(email, otp);
+    try {
+      await this.sendMail(email, otp);
+    } catch (error) {
+      throw new BadRequestException("Failed to send OTP email. Please try again.");
+    }
   }
 
   async verifyOTP(email: string, otp: number): Promise<void> {

@@ -1,22 +1,15 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import Carousel from "./components/Carousel";
-import FoodCards from "./components/FoodCards";
-import Footer from "./components/Footer";
-import logo from "./images/CulinaryOdyssey.jpg";
-import bg1 from "./images/bg1.png";
-import bg2 from "./images/bg2.jpg";
-import bg3 from "./images/bg3.jpg";
-import foodBG from "./images/foodBG.png";
+import Carousel from ".././components/Carousel";
+import MenuCards from "../components/MenuCards";
+import Footer from ".././components/Footer";
+import logo from "../images/CulinaryOdyssey.jpg";
+import foodBG from "../images/foodBG.png";
 import { FaGooglePlay, FaApple } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-
-const carouselImages = [
-  { src: bg1, alt: "Culinary Image 1" },
-  { src: bg2, alt: "Culinary Image 2" },
-  { src: bg3, alt: "Culinary Image 3" },
-];
+import { carouselImages } from ".././components/imageSources";  // Import the array of images
+import { menuCardImages } from ".././components/imageSources";  // Import the menu card images
 
 export default function Home() {
   const [menuData, setMenuData] = useState([]);
@@ -105,7 +98,7 @@ export default function Home() {
       </header>
 
       <main>
-        <Carousel images={carouselImages} />
+        <Carousel images={carouselImages} /> {/* Pass the images as props */}
         <section className="container mx-auto w-9/12 p-5 bg-white rounded-lg shadow-lg mt-10">
           <div className="flex flex-row justify-between">
             <h2 className="text-secondary text-2xl font-bold">
@@ -158,7 +151,7 @@ export default function Home() {
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : (
-            <FoodCards cards={menuData} />
+            <MenuCards cards={menuData} images={menuCardImages} /> 
           )}
         </section>
 

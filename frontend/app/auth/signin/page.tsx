@@ -1,6 +1,6 @@
 'use client';
 import Image from "next/image";
-import loginBG from "../../images/loginBg.png";
+import loginBG from "@/images/loginBg.png";
 import { useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Link from "next/link";

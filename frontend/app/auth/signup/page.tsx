@@ -1,17 +1,20 @@
 'use client';
 import Image from "next/image";
-import loginBG from "../../images/loginBg.png";
+import loginBG from "@/images/loginBg.png";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
-
+import axios from 'axios';
+import toast from 'react-hot-toast';
+import CustomModal from "../CustomModal"; 
+import EnterOtp from "../EnterOtp"; 
 
 const validationSchema = Yup.object({
   name: Yup.string()
     .required("Name is required.")
-    .min(4, "Name length must be at least 4 character."),
+    .min(4, "Name length must be at least 4 characters."),
   email: Yup.string()
     .required("Email is required.")
     .email("Invalid email format.")
@@ -31,33 +34,56 @@ const validationSchema = Yup.object({
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [userEmail, setUserEmail] = useState(""); 
   const router = useRouter();
 
   const handleSignIn = () => {
     router.push("/auth/signin");
   };
 
-  const handleSubmit = (values: any) => {
-    console.log("Form values:", values);
-    
+  const handleSignUp = async (values: any) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post("http://localhost:3000/auth/register", values);
+      toast.success(response.data.message);
+      setUserEmail(values.email); 
+      setIsOtpModalOpen(true); 
+      
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Registration failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpSubmit = async (otp: string) => {
+    try {
+      const response = await axios.post("http://localhost:3000/auth/verify-otp", { otp: parseInt(otp, 10),  email: userEmail });
+      toast.success("OTP verified successfully!");
+      setIsOtpModalOpen(false);
+      router.push("/"); 
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "OTP verification failed.");
+    }
   };
 
   return (
     <div className="flex min-h-screen">
       <div className="w-1/2 relative hidden lg:block">
-        <Image 
-          src={loginBG} 
+        <Image
+          src={loginBG}
           alt="Culinary Odyssey Background"
           className="object-cover"
           fill
         />
         <div className="absolute inset-0 bg-black/30 flex flex-col justify-center px-12">
           <h1 className="text-4xl font-bold text-white text-center">CULINARY ODESSEY</h1>
-          <p className="text-white/90 text-center">A Catering management System</p>
+          <p className="text-white/90 text-center">A Catering Management System</p>
         </div>
       </div>
 
-      {/* Left side with form */}
       <div className="w-full lg:w-1/2 flex items-center">
         <div className="w-full max-w-md mx-auto px-6 bg-white shadow-lg border-1 border-gray-300 rounded-lg py-12">
           <div className="mb-8">
@@ -73,14 +99,12 @@ const SignUp = () => {
               confirmPassword: "",
             }}
             validationSchema={validationSchema}
-            onSubmit={handleSubmit}
+            onSubmit={handleSignUp}
           >
-            {({ values }) => (
+            {() => (
               <Form className="space-y-4">
                 <div>
-                  <label className="block mb-2 text-sm font-bold text-gray-900">
-                    Full name
-                  </label>
+                  <label className="block mb-2 text-sm font-bold text-gray-900">Full name</label>
                   <Field
                     name="name"
                     type="text"
@@ -91,9 +115,7 @@ const SignUp = () => {
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-bold text-gray-900">
-                    Email address
-                  </label>
+                  <label className="block mb-2 text-sm font-bold text-gray-900">Email address</label>
                   <Field
                     name="email"
                     type="email"
@@ -104,9 +126,7 @@ const SignUp = () => {
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-bold text-gray-900">
-                    Password
-                  </label>
+                  <label className="block mb-2 text-sm font-bold text-gray-900">Password</label>
                   <div className="relative">
                     <Field
                       name="password"
@@ -119,19 +139,14 @@ const SignUp = () => {
                       className="absolute right-3 top-1/2 -translate-y-1/2"
                       onClick={() => setShowPassword(!showPassword)}
                     >
-                      {showPassword ? 
-                        <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" /> : 
-                        <AiOutlineEye className="w-5 h-5 text-gray-500" />
-                      }
+                      {showPassword ? <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" /> : <AiOutlineEye className="w-5 h-5 text-gray-500" />}
                     </button>
                   </div>
                   <ErrorMessage name="password" component="div" className="text-red-600 text-sm mt-1" />
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-bold text-gray-900">
-                    Re-enter Password
-                  </label>
+                  <label className="block mb-2 text-sm font-bold text-gray-900">Re-enter Password</label>
                   <div className="relative">
                     <Field
                       name="confirmPassword"
@@ -144,10 +159,7 @@ const SignUp = () => {
                       className="absolute right-3 top-1/2 -translate-y-1/2"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
-                      {showConfirmPassword ? 
-                        <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" /> : 
-                        <AiOutlineEye className="w-5 h-5 text-gray-500" />
-                      }
+                      {showConfirmPassword ? <AiOutlineEyeInvisible className="w-5 h-5 text-gray-500" /> : <AiOutlineEye className="w-5 h-5 text-gray-500" />}
                     </button>
                   </div>
                   <ErrorMessage name="confirmPassword" component="div" className="text-red-600 text-sm mt-1" />
@@ -155,9 +167,10 @@ const SignUp = () => {
 
                 <button
                   type="submit"
-                  className="w-full text-white bg-primary hover:bg-primary-500 focus:ring-4 focus:ring-orange-300 font-bold rounded-lg text-sm px-5 py-2.5 text-center mt-6"
+                  disabled={isLoading}
+                  className={`w-full text-white ${isLoading ? "bg-gray-500" : "bg-primary hover:bg-primary-500"} font-bold rounded-lg text-sm px-5 py-2.5 text-center mt-6`}
                 >
-                  Sign Up
+                  {isLoading ? "Signing Up..." : "Sign Up"}
                 </button>
 
                 <div className="text-sm text-center text-gray-600">
@@ -171,6 +184,11 @@ const SignUp = () => {
           </Formik>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      <CustomModal title="Enter OTP" isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
+        <EnterOtp email={userEmail} onSubmit={handleOtpSubmit} />
+      </CustomModal>
     </div>
   );
 };
