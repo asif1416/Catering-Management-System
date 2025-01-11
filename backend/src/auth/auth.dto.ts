@@ -5,7 +5,6 @@ import {
   IsString,
   Length,
   Matches,
-  Validate,
 } from 'class-validator';
 
 export class AuthDto {
@@ -28,20 +27,15 @@ export class AuthDto {
   })
   password: string;
 
-  @IsNotEmpty({ message: 'Password is required.' })
-  @IsString({ message: 'Password must be a string.' })
-  @Length(8, 50, { message: 'Password must be at least 8 characters long.' })
+  @IsNotEmpty({ message: 'Confirm password is required.' })
+  @IsString({ message: 'Confirm password must be a string.' })
+  @Length(8, 50, { message: 'Confirm password must be at least 8 characters long.' })
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/, {
     message:
       'Password must contain at least one uppercase letter, one lowercase letter, and one number.',
   })
   confirmPassword: string;
 
-  
-  /*@IsNotEmpty({ message: 'Address is required.' })
-  @IsString({ message: 'Address must be a string.' })
-  @Length(1, 100, { message: 'Address must be between 1 and 100 characters.' })
-  address: string;*/
 }
 
 export class VerifyOtpDto {

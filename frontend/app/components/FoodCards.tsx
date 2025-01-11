@@ -18,7 +18,7 @@ export default function FoodCards({ cards }: FoodCardsProps) {
     <div className="container mx-auto px-4 py-8">
       <div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto"
-        style={{ maxHeight: '600px' }} 
+        style={{ maxHeight: '820px' }} 
       >
         {cards.map((card) => ( 
           <div key={card.id} className="bg-white rounded-lg shadow-md overflow-hidden">

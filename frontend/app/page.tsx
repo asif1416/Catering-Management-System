@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Carousel from "./components/Carousel";
 import FoodCards from "./components/FoodCards";
@@ -8,6 +10,7 @@ import bg2 from "./images/bg2.jpg";
 import bg3 from "./images/bg3.jpg";
 import foodBG from "./images/foodBG.png";
 import { FaGooglePlay, FaApple } from "react-icons/fa";
+import { useRouter } from "next/navigation";
 
 const carouselImages = [
   { src: bg1, alt: "Culinary Image 1" },
@@ -15,16 +18,34 @@ const carouselImages = [
   { src: bg3, alt: "Culinary Image 3" },
 ];
 
-async function getMenuData() {
-  const res = await fetch('http://localhost:3000/menu');
-  if (!res.ok) {
-    throw new Error('Failed to fetch menu data');
-  }
-  return res.json();
-}
+export default function Home() {
+  const [menuData, setMenuData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const router = useRouter();
 
-export default async function Home() {
-  const menuData = await getMenuData();
+  const handleSignIn = () => {
+    router.push("/auth/signin");
+  };
+
+  useEffect(() => {
+    async function fetchMenuData() {
+      try {
+        const response = await fetch("http://localhost:3000/menu");
+        if (!response.ok) {
+          throw new Error("Failed to fetch menu data");
+        }
+        const data = await response.json();
+        setMenuData(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchMenuData();
+  }, []);
 
   return (
     <>
@@ -46,30 +67,6 @@ export default async function Home() {
                 <span className="text-primary">Culinary Odyssey</span>
               </span>
             </a>
-            <button
-              data-collapse-toggle="navbar-default"
-              type="button"
-              className="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
-              aria-controls="navbar-default"
-              aria-expanded="false"
-            >
-              <span className="sr-only">Open main menu</span>
-              <svg
-                className="w-5 h-5"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 17 14"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M1 1h15M1 7h15M1 13h15"
-                />
-              </svg>
-            </button>
             <div
               className="hidden w-full md:block md:w-auto"
               id="navbar-default"
@@ -96,6 +93,7 @@ export default async function Home() {
                   <a
                     href="#"
                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0"
+                    onClick={handleSignIn}
                   >
                     Sign in
                   </a>
@@ -123,7 +121,6 @@ export default async function Home() {
                   Search
                 </label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none"></div>
                   <input
                     type="search"
                     id="default-search"
@@ -156,7 +153,13 @@ export default async function Home() {
             </div>
           </div>
           <hr className="mt-2 border-primary " />
-          <FoodCards cards={menuData} />
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p className="text-red-500">Error: {error}</p>
+          ) : (
+            <FoodCards cards={menuData} />
+          )}
         </section>
 
         <section className="py-16 mt-40 relative">
@@ -197,4 +200,3 @@ export default async function Home() {
     </>
   );
 }
-
