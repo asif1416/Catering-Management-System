@@ -5,12 +5,18 @@ import * as Yup from "yup";
 import React, { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
+import CustomModal from "./CustomModal"; 
+import api from "@/api/api";
 
 const EnterOtp = ({
   email,
+  isOpen,
+  onClose,
   onSubmit,
 }: {
   email: string;
+  isOpen: boolean;
+  onClose: () => void;
   onSubmit: (otp: string) => void;
 }) => {
   const [resetTime, setResetTime] = useState(60);
@@ -36,7 +42,7 @@ const EnterOtp = ({
     try {
       setResetTime(60);
       setIsResendDisabled(true);
-      const response = await axios.post("http://localhost:3000/auth/send-otp", { email });
+      const response = await api.post("http://localhost:3000/auth/send-otp", { email });
   
         toast.success(response.data.message || "OTP resent successfully.");
         setResetTime(60);
@@ -54,7 +60,8 @@ const EnterOtp = ({
   });
 
   return (
-    <Formik
+    <CustomModal isOpen={isOpen} onClose={onClose} title="Enter OTP">
+      <Formik
       initialValues={{ otp: "" }}
       validationSchema={otpValidationSchema}
       onSubmit={(values) => onSubmit(values.otp)}
@@ -102,6 +109,8 @@ const EnterOtp = ({
         </Form>
       )}
     </Formik>
+    </CustomModal>
+    
   );
 };
 

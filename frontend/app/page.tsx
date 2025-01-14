@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import {Avatar} from "@nextui-org/react";
 import Carousel from ".././components/Carousel";
 import MenuCards from "../components/MenuCards";
 import Footer from ".././components/Footer";
@@ -8,17 +9,38 @@ import logo from "../images/CulinaryOdyssey.jpg";
 import foodBG from "../images/foodBG.png";
 import { FaGooglePlay, FaApple } from "react-icons/fa";
 import { useRouter } from "next/navigation";
-import { carouselImages } from ".././components/imageSources";  // Import the array of images
-import { menuCardImages } from ".././components/imageSources";  // Import the menu card images
+import { carouselImages } from ".././components/imageSources";
+import { menuCardImages } from ".././components/imageSources";
+import { useAuthStore } from "@/store/auth-store";
+import api from "@/api/api";
 
 export default function Home() {
+  const { isLoggedIn, login, logout } = useAuthStore();
   const [menuData, setMenuData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  interface Customer {
+    name: string;
+    image?: string;
+  }
+
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const router = useRouter();
 
   const handleSignIn = () => {
     router.push("/auth/signin");
+  };
+
+  const handleLogout = async () => {
+    try {
+      const response = await api.get("http://localhost:3000/auth/logout");
+      logout();
+    } catch {
+      console.log("Failed to logout");
+    } finally {
+      router.push("/auth/signin");
+    }
   };
 
   useEffect(() => {
@@ -40,6 +62,32 @@ export default function Home() {
     fetchMenuData();
   }, []);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await api.get("http://localhost:3000/auth/validate");
+        if (response) {
+          login();
+        } else {
+          logout();
+        }
+      } catch (error) {
+        logout();
+      }
+    };
+    const fetchCustomerData = async () => {
+      try {
+        const response = await api.get("http://localhost:3000/customer/");
+        setCustomer(response.data);
+        //console.table(response.data);
+      } catch (err) {
+        console.log("Failed to fetch customer data", err);
+      }
+    };
+    fetchCustomerData();
+    checkAuth();
+  }, [login, logout]);
+
   return (
     <>
       <header className="p-5">
@@ -49,12 +97,7 @@ export default function Home() {
               href="/"
               className="flex items-center space-x-3 rtl:space-x-reverse"
             >
-              <Image
-                src={logo}
-                alt="Culinary Odyssey Logo"
-                width={60}
-                height={60}
-              />
+            
               <span className="self-center text-2xl font-semibold whitespace-nowrap">
                 Welcome to{" "}
                 <span className="text-primary">Culinary Odyssey</span>
@@ -66,30 +109,43 @@ export default function Home() {
             >
               <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
                 <li>
-                  <a
-                    href="#"
-                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0"
-                    aria-current="page"
-                  >
+                  <a href="#" className="block py-2 px-3 hover:text-primary">
                     Home
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0"
-                  >
+                  <a href="#" className="block py-2 px-3 hover:text-primary">
                     Contact us
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#"
-                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-primary md:p-0"
-                    onClick={handleSignIn}
-                  >
-                    Sign in
-                  </a>
+                {isLoggedIn ? (
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-4 cursor-pointer" onClick={() => router.push("/customer")}>
+                        {customer && (
+                          <>
+                            <Avatar isBordered color="primary" src="https://i.pravatar.cc/150?u=a04258a2462d826712d" />
+                            <span className="text-primary font-semibold">
+                              {customer.name}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      <button
+                        className="block py-2 px-3 text-white bg-primary rounded hover:bg-primary-500"
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      className="block py-2 px-3 text-white bg-primary rounded hover:bg-primary-500"
+                      onClick={handleSignIn}
+                    >
+                      Sign in
+                    </button>
+                  )}
                 </li>
               </ul>
             </div>
@@ -151,10 +207,9 @@ export default function Home() {
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : (
-            <MenuCards cards={menuData} images={menuCardImages} /> 
+            <MenuCards cards={menuData} images={menuCardImages} />
           )}
         </section>
-
         <section className="py-16 mt-40 relative">
           <Image
             src={foodBG}

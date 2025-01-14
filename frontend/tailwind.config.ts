@@ -7,7 +7,7 @@ export default {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/flowbite/**/*.js",
-    "./node_modules/@nextui-org/theme/dist/components/(button|modal|ripple|spinner).js"
+    "./node_modules/@nextui-org/theme/dist/components/(avatar|button|modal|ripple|spinner).js"
   ],
   theme: {
     extend: {

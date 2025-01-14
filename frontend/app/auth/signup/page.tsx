@@ -8,8 +8,7 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import CustomModal from "../CustomModal"; 
-import EnterOtp from "../EnterOtp"; 
+import EnterOtp from "@/components/EnterOtp"; 
 
 const validationSchema = Yup.object({
   name: Yup.string()
@@ -36,7 +35,7 @@ const SignUp = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState(""); 
+  const [email, setEmail] = useState(""); 
   const router = useRouter();
 
   const handleSignIn = () => {
@@ -48,7 +47,7 @@ const SignUp = () => {
     try {
       const response = await axios.post("http://localhost:3000/auth/register", values);
       toast.success(response.data.message);
-      setUserEmail(values.email); 
+      setEmail(values.email); 
       setIsOtpModalOpen(true); 
       
     } catch (error: any) {
@@ -60,7 +59,7 @@ const SignUp = () => {
 
   const handleOtpSubmit = async (otp: string) => {
     try {
-      const response = await axios.post("http://localhost:3000/auth/verify-otp", { otp: parseInt(otp, 10),  email: userEmail });
+      const response = await axios.post("http://localhost:3000/auth/verify-otp", { otp: parseInt(otp, 10),  email: email });
       toast.success("OTP verified successfully!");
       setIsOtpModalOpen(false);
       router.push("/"); 
@@ -186,9 +185,7 @@ const SignUp = () => {
       </div>
 
       {/* OTP Modal */}
-      <CustomModal title="Enter OTP" isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)}>
-        <EnterOtp email={userEmail} onSubmit={handleOtpSubmit} />
-      </CustomModal>
+      {isOtpModalOpen && <EnterOtp email={email} isOpen={isOtpModalOpen} onClose={() => setIsOtpModalOpen(false)} onSubmit={handleOtpSubmit} />}
     </div>
   );
 };

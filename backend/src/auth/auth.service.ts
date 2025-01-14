@@ -10,6 +10,7 @@ import { AuthDto } from './auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
+import { jwtConstants } from './auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -213,6 +214,21 @@ export class AuthService {
     customer.password = await bcrypt.hash(password, saltRounds);
 
     await this.customerRepository.save(customer);
+  }
+
+  validateToken(token: string): { isLoggedIn: boolean; user?: any } {
+    if (!token) {
+      throw new UnauthorizedException('Token not provided');
+    }
+
+    try {
+      const decodedToken = this.jwtService.verify(token, {
+        secret: jwtConstants.secret, 
+      });
+      return { isLoggedIn: true, user: decodedToken };
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token');
+    }
   }
 
   async logout(): Promise<{ message: string }> {

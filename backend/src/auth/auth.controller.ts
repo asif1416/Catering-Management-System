@@ -5,8 +5,10 @@ import {
   Get,
   BadRequestException,
   Res,
+  HttpStatus,
+  Req,
 } from '@nestjs/common';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { AuthDto, VerifyOtpDto, ResetPasswordDto } from './auth.dto';
 import { Public } from './auth.decorators';
@@ -39,8 +41,8 @@ export class AuthController {
 
     response.cookie('jwt', access_token, {
       httpOnly: true,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      secure: true,
       maxAge: 3600 * 1000,
     });
 
@@ -80,6 +82,7 @@ export class AuthController {
   async resetPassword(
     @Body() { email, password, confirmPassword }: ResetPasswordDto ,
   ): Promise<{ message: string }> {
+    //console.dir(Body);
     if (password !== confirmPassword) {
       throw new BadRequestException(
         'Password and Confirm Password do not match.',
@@ -91,6 +94,19 @@ export class AuthController {
     return {
       message: 'Password reset successfully.',
     };
+  }
+
+  @Get('validate')
+  validateToken(@Req() req: Request, @Res() res: Response) {
+    const token = req.cookies.jwt; 
+    try {
+      const result = this.authService.validateToken(token);
+      return res.status(HttpStatus.OK).json(result);
+    } catch (error) {
+      return res
+        .status(HttpStatus.UNAUTHORIZED)
+        .json({ message: error.message });
+    }
   }
 
   @Get('/logout')

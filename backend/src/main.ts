@@ -18,9 +18,9 @@ async function bootstrap() {
   app.useGlobalGuards(new AuthGuard(jwtService, reflector));
 
   app.enableCors({
-    credentials: true,
-    origin: 'http://localhost:3001',
-  })
+    origin: 'http://localhost:3001', 
+    credentials: true, 
+  });
   app.use(helmet());
   app.use(cookieParser());
   await app.listen(process.env.PORT ?? 3000);
