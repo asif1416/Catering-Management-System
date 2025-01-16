@@ -37,7 +37,7 @@ export class CustomerController {
     return this.customerService.getCustomerById(id);
   }
 
-  @Patch('/customers/:id')
+  @Patch('/:id')
   async updateUser(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateData: Partial<AuthDto>,

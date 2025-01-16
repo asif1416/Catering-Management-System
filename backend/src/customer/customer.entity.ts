@@ -16,6 +16,9 @@ export class Customer {
   @Column({ length: 500 })
   password: string;
 
+  @Column({ length: 11, nullable: true })
+  phone: string
+
   @Column({ length: 500, nullable: true })
   address: string;
 

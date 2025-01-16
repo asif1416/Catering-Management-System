@@ -42,22 +42,15 @@ export class CustomerService {
     return customer;
   }
 
-  async updateUser(
-    id: number,
-    updateData: Partial<AuthDto>,
-  ): Promise<Customer> {
+  async updateUser(id: number, updateData: Partial<AuthDto>): Promise<Customer> {
     const user = await this.customerRepository.findOne({ where: { id } });
-
+  
     if (!user) {
       throw new NotFoundException(`User with ID ${id} not found.`);
     }
-
-    /*if (updateData.password) {
-          const saltRounds = 10;
-          updateData.password = await bcrypt.hash(updateData.password, saltRounds);
-        }*/
-
+  
     Object.assign(user, updateData);
     return this.customerRepository.save(user);
   }
+  
 }

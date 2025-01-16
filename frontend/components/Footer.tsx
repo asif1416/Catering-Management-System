@@ -7,7 +7,7 @@ import bgImage from '../images/footerBG.png'
 
 export default function Footer() {
   return (
-    <footer className="mt-20">
+    <footer>
       {/* Sign Up Section */}
       <div className="py-20 relative">
         <Image
@@ -96,7 +96,7 @@ export default function Footer() {
             </div>
 
             <p className="text-neutral-400 text-sm">
-              KitchenRobbio.com | All rights reserved
+              calinaryodissey.com | All rights reserved
             </p>
           </div>
         </div>
