@@ -8,6 +8,7 @@ import {
   Patch,
   Req,
   UnauthorizedException,
+  NotFoundException,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto, UpdateCartDto, RemoveFromCartDto } from './cart.dto';
@@ -44,23 +45,28 @@ export class CartController {
     @Req() request: any,
     @Body() removeFromCartDto: RemoveFromCartDto,
   ) {
-    const token =
-      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
+    try {
+      const token =
+        request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
+      if (!token) {
+        throw new UnauthorizedException('Access token is required.');
+      }
+      //console.log('Request received at /cart/remove');
+      //console.log('CartItemId:', removeFromCartDto.cartItemId);
 
-    if (!token) {
-      throw new UnauthorizedException('Access token is required.');
+      const customer = await this.cartService.getCustomer(token);
+
+      await this.cartService.removeCartItem(
+        customer.id,
+        removeFromCartDto.cartItemId,
+      );
+
+      return {
+        message: 'Item removed from cart successfully',
+      };
+    } catch (error) {
+      throw new NotFoundException('Cart item not found.');
     }
-
-    const customer = await this.cartService.getCustomer(token);
-
-    await this.cartService.removeFromCart(
-      customer.id,
-      removeFromCartDto.menuId,
-    );
-
-    return {
-      message: 'Item removed from cart',
-    };
   }
 
   @Get()
@@ -111,22 +117,7 @@ export class CartController {
   async updateCart(@Req() request: any, @Body() updateCartDto: UpdateCartDto) {
     const token =
       request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
-
-    if (!token) {
-      throw new UnauthorizedException('Access token is required.');
-    }
-
     const customer = await this.cartService.getCustomer(token);
-
-    const updatedCart = await this.cartService.updateCart(
-      customer.id,
-      updateCartDto.menuId,
-      updateCartDto.quantity,
-    );
-
-    return {
-      message: 'Cart updated successfully',
-      updatedCart,
-    };
+    return this.cartService.updateCart(customer.id, updateCartDto);
   }
 }

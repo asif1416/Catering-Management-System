@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image, { type StaticImageData } from "next/image";
-import { menuCardImages } from "@/components/imageSources";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { useCartStore } from "@/store/cart-store";
@@ -13,37 +12,37 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Heart, Trash2, MapPin, Minus, Plus } from "lucide-react";
-import api from "@/api/api";
+import { IoIosArrowBack } from "react-icons/io";
+
+import {
+  fetchCartItems,
+  updateCartQuantity,
+  removeCartItem,
+  clearCart,
+} from "@/api/cart";
 import toast from "react-hot-toast";
 
 export default function CartPage() {
-  const menuImage = menuCardImages[0] || {
-    src: "/placeholder.svg",
-    alt: "Placeholder Image",
-  };
   const router = useRouter();
   const { isLoggedIn, checkAuth } = useAuthStore();
   const {
     items,
     selectedItems,
     setItems,
-    removeFromCart,
     updateQuantity,
     toggleItemSelection,
     toggleAllSelection,
   } = useCartStore();
   const [loading, setLoading] = useState(true);
+  const [isAllSelected, setIsAllSelected] = useState(false);
 
   useEffect(() => {
     const initializeCart = async () => {
       setLoading(true);
       const isAuth = await checkAuth();
-      console.log("Is Authenticated:", isAuth);
       if (isAuth) {
         try {
-          const response = await api.get("/cart");
-          const cartItems = response.data.cart?.items || [];
-
+          const cartItems = await fetchCartItems();
           const formattedItems = cartItems.map((item: any) => ({
             id: item.id,
             menuId: item.menu.id,
@@ -52,54 +51,47 @@ export default function CartPage() {
             quantity: item.quantity,
             image: item.menu.image || "/placeholder.svg",
           }));
-
-          setItems(formattedItems); 
-        } catch (error) {
-          console.error("Failed to fetch cart:", error);
-          toast.error("Failed to load cart items");
+          setItems(formattedItems);
+        } catch (error: any) {
+          toast.error(error.message);
         }
-      } 
+      }
       setLoading(false);
     };
 
     initializeCart();
-  }, [checkAuth, setItems, router]);
+  }, [checkAuth, setItems]);
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
-      await api.patch(`/cart/${itemId}`, { quantity: newQuantity });
+      await updateCartQuantity(itemId, newQuantity);
       updateQuantity(itemId, newQuantity);
       toast.success("Cart updated successfully");
-    } catch (error) {
-      console.error("Failed to update quantity:", error);
-      toast.error("Failed to update cart");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
-  const handleRemoveItem = async (itemId: number) => {
+  const handleRemoveItem = async (cartItemId: number) => {
     try {
-      await api.delete(`/cart/${itemId}`);
-      removeFromCart(itemId);
-      toast.success("Item removed from cart");
-    } catch (error) {
-      console.error("Failed to remove item:", error);
-      toast.error("Failed to remove item from cart");
+      await removeCartItem(cartItemId);
+      console.log("Item removed successfully");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
 
   const handleDeleteSelected = async () => {
     try {
-      await Promise.all(
-        Array.from(selectedItems).map((itemId) => api.delete(`/cart/${itemId}`))
-      );
-      Array.from(selectedItems).forEach((itemId) => removeFromCart(itemId));
-      toast.success("Selected items removed from cart");
-    } catch (error) {
-      console.error("Failed to remove items:", error);
-      toast.error("Failed to remove items from cart");
+      await clearCart();
+      console.log("Cart cleared successfully");
+    } catch (error: any) {
+      toast.error(error.message);
     }
   };
+
+  const handleBack = () => router.back();
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -148,6 +140,14 @@ export default function CartPage() {
     <>
       <Navbar />
       <main className="container mx-auto px-4 py-8">
+        <Button
+          onClick={handleBack}
+          variant="outline"
+          className="mb-4 flex items-center hover:text-primary"
+        >
+          <IoIosArrowBack className="mr-2" />
+          Go Back
+        </Button>
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-2/3">
             <div className="flex items-center justify-between mb-4">
@@ -156,19 +156,20 @@ export default function CartPage() {
                   checked={
                     selectedItems.size === items.length && items.length > 0
                   }
-                  onCheckedChange={(checked) =>
-                    toggleAllSelection(checked as boolean)
-                  }
+                  onCheckedChange={(checked) => {
+                    toggleAllSelection(checked as boolean);
+                    setIsAllSelected(checked as boolean);
+                  }}
                   id="select-all"
                 />
                 <label
                   htmlFor="select-all"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-sm font-medium leading-none"
                 >
                   SELECT ALL ({items.length} ITEM(S))
                 </label>
               </div>
-              {selectedItems.size > 0 && (
+              {isAllSelected && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -204,10 +205,7 @@ export default function CartPage() {
                           onCheckedChange={() => toggleItemSelection(item.id)}
                         />
                         <Image
-                          src={
-                            (menuImage.src as string | StaticImageData) ||
-                            "/placeholder.svg"
-                          }
+                          src={item.image || "/placeholder.svg"}
                           alt={item.name}
                           width={80}
                           height={80}
@@ -217,7 +215,7 @@ export default function CartPage() {
                           <h3 className="font-medium">{item.name}</h3>
                           <div className="mt-2">
                             <p className="text-sm text-muted-foreground">
-                              Price: tk{item.price}
+                              Price: ${item.price}
                             </p>
                           </div>
                         </div>
@@ -251,8 +249,9 @@ export default function CartPage() {
                               size="icon"
                               variant="ghost"
                               className="text-red-500 hover:text-red-600"
+                              onClick={() => handleRemoveItem(item.id)}
                             >
-                              <Heart className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>
@@ -263,7 +262,6 @@ export default function CartPage() {
               </div>
             )}
           </div>
-
           <div className="lg:w-1/3">
             <Card>
               <CardContent className="p-6">
@@ -272,22 +270,55 @@ export default function CartPage() {
                   <h2 className="font-medium">Location</h2>
                 </div>
                 <p className="text-sm text-muted-foreground mb-6">
-                  Feni Sadar, Feni,Chattogram
+                  Feni Sadar, Feni, Chattogram
                 </p>
                 <h2 className="font-medium mb-4">Order Summary</h2>
                 <div className="space-y-4">
+                  {Array.from(selectedItems).map((itemId) => {
+                    const item = items.find((item) => item.id === itemId);
+                    if (!item) return null;
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex justify-between text-sm text-muted-foreground"
+                      >
+                        <span>
+                          {item.name} (x{item.quantity})
+                        </span>
+                        <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      </div>
+                    );
+                  })}
+                  <Separator />
                   <div className="flex justify-between text-sm">
-                    <span>Subtotal ({items.length} items)</span>
-                    <span>₹{subtotal.toFixed(2)}</span>
+                    <span>Subtotal ({selectedItems.size} items)</span>
+                    <span>
+                      $
+                      {Array.from(selectedItems)
+                        .reduce((sum, itemId) => {
+                          const item = items.find((item) => item.id === itemId);
+                          return sum + (item ? item.price * item.quantity : 0);
+                        }, 0)
+                        .toFixed(2)}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Shipping Fee</span>
-                    <span>₹{shippingFee.toFixed(2)}</span>
+                    <span>${shippingFee.toFixed(2)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between font-medium">
                     <span>Total</span>
-                    <span className="text-primary">₹{total.toFixed(2)}</span>
+                    <span className="text-primary">
+                      $
+                      {Array.from(selectedItems)
+                        .reduce((sum, itemId) => {
+                          const item = items.find((item) => item.id === itemId);
+                          return sum + (item ? item.price * item.quantity : 0);
+                        }, shippingFee)
+                        .toFixed(2)}
+                    </span>
                   </div>
                   <Button
                     className="w-full"
@@ -306,3 +337,4 @@ export default function CartPage() {
     </>
   );
 }
+

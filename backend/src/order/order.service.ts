@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Order } from './order.entity';
@@ -18,15 +22,17 @@ export class OrderService {
 
   async sendReciept(email: string, order: Order): Promise<void> {
     const formatDate = (date: Date) => {
-      return date ? date.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' }) : 'N/A';
+      return date
+        ? date.toLocaleString('en-US', { timeZone: 'Asia/Dhaka' })
+        : 'N/A';
     };
-  
+
     const message = `
       <html>
         <body style="font-family: Arial, sans-serif; padding: 20px;">
           <div style="max-width: 600px; margin: auto; padding: 20px; background-color: #f4f4f4; border-radius: 8px;">
             <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
-              <h2 style="text-align: center; color: #f49b33;">Order Receipt - Calinary Odissey</h2>
+              <h2 style="text-align: center; color: #f49b33;">Order Receipt - Culinary Odyssey</h2>
               <hr style="border: 1px solid #ddd;">
               <p><strong>Customer Name:</strong> ${order.customer.name}</p>
               <p><strong>Email:</strong> ${email}</p>
@@ -48,26 +54,22 @@ export class OrderService {
         </body>
       </html>
     `;
-  
+
     await this.mailerService.sendMail({
       to: email,
       subject: 'Order Receipt',
       html: message,
     });
   }
-  
 
   async createOrder(
-    customerId: number,
+    token: string,
     menuItemId: number,
     quantity: number,
     startTime?: string,
     endTime?: string,
   ): Promise<Order> {
-    const customer = await this.customerService.getCustomerById(customerId);
-    if (!customer) {
-      throw new NotFoundException('User not found');
-    }
+    const customer = await this.customerService.getCustomer(token);
 
     const menuItem = await this.menuService.getMenuItemById(menuItemId);
     if (!menuItem) {
@@ -90,9 +92,11 @@ export class OrderService {
     return order;
   }
 
-  async cancelOrder(orderId: number): Promise<Order> {
+  async cancelOrder(token: string, orderId: number): Promise<Order> {
+    const customer = await this.customerService.getCustomer(token);
+
     const order = await this.orderRepository.findOne({
-      where: { id: orderId },
+      where: { id: orderId, customer: { id: customer.id } },
     });
     if (!order) {
       throw new NotFoundException('Order not found');
@@ -102,18 +106,23 @@ export class OrderService {
     return this.orderRepository.save(order);
   }
 
-  async getOrders(): Promise<Order[]> {
-    return this.orderRepository.find();
+  async getOrders(token: string): Promise<Order[]> {
+    const customer = await this.customerService.getCustomer(token);
+
+    return this.orderRepository.find({
+      where: { customer: { id: customer.id } },
+    });
   }
 
-  async getOrderById(orderId: number): Promise<Order> {
+  async getOrderById(token: string, orderId: number): Promise<Order> {
+    const customer = await this.customerService.getCustomer(token);
+
     const order = await this.orderRepository.findOne({
-      where: { id: orderId },
+      where: { id: orderId, customer: { id: customer.id } },
     });
     if (!order) {
       throw new NotFoundException('Order not found');
     }
     return order;
   }
-
 }

@@ -10,7 +10,6 @@ import { useRouter } from "next/navigation";
 import { carouselImages } from "@/components/imageSources";
 import { menuCardImages } from "@/components/imageSources";
 import { useAuthStore } from "@/store/auth-store";
-import api from "@/api/api";
 import debounce from "lodash.debounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -24,6 +23,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+
+import { fetchMenuData, searchMenuItems } from "@/api/home"; 
+import toast from "react-hot-toast";
 
 export default function Home() {
   const { login, logout, isLoggedIn, checkAuth } = useAuthStore();
@@ -51,31 +53,29 @@ export default function Home() {
   }, [checkAuth, logout]);
 
   useEffect(() => {
-    async function fetchMenuData() {
+    async function fetchMenu() {
       try {
-        const response = await api.get("/menu");
-        if (!response.data) {
-          throw new Error("Failed to fetch menu data");
-        }
-        setMenuData(response.data);
+        const data = await fetchMenuData();
+        setMenuData(data);
       } catch (err: any) {
         setError(err.message);
+
       } finally {
         setLoading(false);
       }
     }
 
-    fetchMenuData();
+    fetchMenu();
   }, []);
 
   const handleSearch = useCallback(
     debounce(async (searchTerm: string) => {
       if (searchTerm.length >= 1) {
         try {
-          const response = await api.get(`/menu/search?name=${searchTerm}`);
-          setSearchResults(response.data);
-        } catch (err) {
-          console.error("Error searching menu items:", err);
+          const data = await searchMenuItems(searchTerm);
+          setSearchResults(data);
+        } catch (err: any) {
+          toast.error(err.message);
         }
       } else {
         setSearchResults([]);
@@ -111,9 +111,7 @@ export default function Home() {
         </section>
         <section className="container mx-auto w-11/12 lg:w-9/12 p-5 bg-white rounded-lg shadow-lg mt-10">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <h2 className="text-secondary text-2xl font-bold">
-              Our meal plans
-            </h2>
+            <h2 className="text-primary text-2xl font-bold">Our meal plans</h2>
             <div className="w-full md:w-auto">
               <form
                 className="flex w-full max-w-sm items-center space-x-2"

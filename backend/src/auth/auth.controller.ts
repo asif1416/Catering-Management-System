@@ -43,7 +43,7 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'lax',
       secure: true,
-      maxAge: 3600 * 1000,
+      maxAge: 24 *3600 * 1000,
     });
 
     return {

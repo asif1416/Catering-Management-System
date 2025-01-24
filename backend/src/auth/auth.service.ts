@@ -80,7 +80,7 @@ export class AuthService {
     const payload = { id: customer.id, email: customer.email };
     return {
       access_token: await this.jwtService.signAsync(payload, {
-        expiresIn: '1h',
+        expiresIn: '24h',
       }),
     };
   }

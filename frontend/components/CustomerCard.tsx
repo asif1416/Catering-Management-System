@@ -1,30 +1,46 @@
-import { Card, CardHeader, CardBody } from "@nextui-org/react";
-import Image from "next/image";
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const CustomerCard = ({ customer }: { customer: { name: string; email: string; address: string } }) => {
+interface CustomerCardProps {
+  customer: {
+    name: string;
+    email: string;
+    address: string;
+  };
+}
+
+const CustomerCard = ({ customer }: CustomerCardProps) => {
   return (
-    <Card className="py-4 w-full max-w-sm mx-auto">
-      <CardHeader className="pb-0 pt-2 px-4 flex-col items-start">
-        <p className="text-tiny uppercase font-bold">Customer Information</p>
-        <h4 className="font-bold text-large">{customer.name || "N/A"}</h4>
+    <Card className="w-full max-w-sm mx-auto">
+      <CardHeader>
+        <div className="flex items-center space-x-4">
+          <Avatar className="w-12 h-12">
+            <AvatarImage
+              src="https://i.pravatar.cc/150?u=a04258a2462d826712d"
+              alt="Customer avatar"
+            />
+            <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium leading-none">
+              Customer Information
+            </p>
+            <h4 className="text-xl font-bold mt-1">{customer.name || "N/A"}</h4>
+          </div>
+        </div>
       </CardHeader>
-      <CardBody className="overflow-visible py-2">
-        <Image
-          alt="Customer avatar"
-          className="object-cover rounded-xl"
-          src="https://i.pravatar.cc/150?u=a04258a2462d826712d"
-          width={270}
-          height={270}
-        />
-        <div className="mt-4">
-          <p>
-            <strong>Email:</strong> {customer.email || "N/A"}
+      <CardContent>
+        <div className="space-y-2">
+          <p className="text-sm">
+            <span className="font-semibold">Email:</span>{" "}
+            {customer.email || "N/A"}
           </p>
-          <p>
-            <strong>Address:</strong> {customer.address || "Not provided"}
+          <p className="text-sm">
+            <span className="font-semibold">Address:</span>{" "}
+            {customer.address || "Not provided"}
           </p>
         </div>
-      </CardBody>
+      </CardContent>
     </Card>
   );
 };

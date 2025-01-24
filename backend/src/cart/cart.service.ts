@@ -11,6 +11,7 @@ import { Menu } from '../menu/menu.entity';
 import { CartItem } from './cartItem.entity';
 import { jwtConstants } from '../auth/auth.constants';
 import { JwtService } from '@nestjs/jwt';
+import { UpdateCartDto } from './cart.dto';
 
 @Injectable()
 export class CartService {
@@ -105,22 +106,21 @@ export class CartService {
     }
   }
 
-  async removeFromCart(customerId: number, menuId: number): Promise<void> {
+  async removeCartItem(customerId: number, cartItemId: number): Promise<void> {
     const cart = await this.cartRepository.findOne({
       where: { customer: { id: customerId } },
-      relations: ['items'],
+      relations: ['items', 'items.menu'],
     });
 
     if (!cart) {
-      throw new NotFoundException('Cart not found');
+      throw new NotFoundException('Cart not found.');
     }
 
-    const cartItem = await this.cartItemRepository.findOne({
-      where: { cart: { id: cart.id }, menu: { id: menuId } },
-    });
+    // Find the specific cart item by cartItemId
+    const cartItem = cart.items.find((item) => item.id === cartItemId);
 
     if (!cartItem) {
-      throw new NotFoundException('Item not found in cart');
+      throw new NotFoundException('Cart item not found.');
     }
 
     await this.cartItemRepository.remove(cartItem);
@@ -152,32 +152,35 @@ export class CartService {
     await this.cartItemRepository.remove(cart.items);
   }
 
-  async updateCart(
-    customerId: number,
-    menuId: number,
-    quantity: number,
-  ): Promise<CartItem> {
+  async updateCart(customerId: number, updateCartDto: UpdateCartDto) {
+    const { menuId, quantity } = updateCartDto; 
+
     const cart = await this.cartRepository.findOne({
       where: { customer: { id: customerId } },
       relations: ['items', 'items.menu'],
     });
 
     if (!cart) {
-      throw new NotFoundException('Cart not found');
+      throw new NotFoundException('Cart not found.');
     }
 
-    const cartItem = await this.cartItemRepository.findOne({
-      where: { cart: { id: cart.id }, menu: { id: menuId } },
-      relations: ['menu'],
-    });
+    const cartItem = cart.items.find((item) => item.id === menuId);
 
     if (!cartItem) {
-      throw new NotFoundException('Item not found in cart');
+      throw new NotFoundException(
+        `Cart item with ID ${menuId} not found in the cart.`,
+      );
+    }
+
+    // Update the quantity or remove the item if quantity is 0
+    if (quantity === 0) {
+      await this.cartItemRepository.remove(cartItem);
+      return { message: 'Cart item removed successfully.' };
     }
 
     cartItem.quantity = quantity;
-    cartItem.totalPrice = quantity * cartItem.menu.price;
+    await this.cartItemRepository.save(cartItem); 
 
-    return this.cartItemRepository.save(cartItem);
+    return { message: 'Cart item updated successfully.', cartItem };
   }
 }
