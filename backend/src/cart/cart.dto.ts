@@ -1,11 +1,7 @@
 import { IsInt, IsPositive, Min, IsNotEmpty } from 'class-validator';
 
 export class AddToCartDto {
-  @IsInt({ message: 'Customer ID must be an integer' })
-  @IsPositive({ message: 'Customer ID must be a positive number' })
-  @IsNotEmpty({ message: 'Customer ID is required' })
-  customerId: number;
-
+  customerId?: number;
   @IsInt({ message: 'Menu ID must be an integer' })
   @IsPositive({ message: 'Menu ID must be a positive number' })
   @IsNotEmpty({ message: 'Menu ID is required' })
@@ -16,6 +12,7 @@ export class AddToCartDto {
   @IsNotEmpty({ message: 'Quantity is required' })
   quantity: number;
 }
+
 
 export class UpdateCartDto {
   @IsInt({ message: 'Customer ID must be an integer' })

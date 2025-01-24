@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cart } from './cart.entity';
 import { Customer } from '../customer/customer.entity';
 import { Menu } from '../menu/menu.entity';
 import { CartItem } from './cartItem.entity';
+import { jwtConstants } from '../auth/auth.constants';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class CartService {
@@ -17,6 +23,7 @@ export class CartService {
     private readonly menuRepository: Repository<Menu>,
     @InjectRepository(CartItem)
     private readonly cartItemRepository: Repository<CartItem>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async addToCart(
@@ -30,49 +37,73 @@ export class CartService {
     if (!customer) {
       throw new NotFoundException('Customer not found');
     }
-  
+
     const menu = await this.menuRepository.findOne({
       where: { id: menuId },
     });
     if (!menu) {
       throw new NotFoundException('Menu item not found');
     }
-  
+
+    // Find or create a cart for the customer
+    let cart = await this.cartRepository.findOne({
+      where: { customer: { id: customerId } },
+    });
+
+    if (!cart) {
+      cart = this.cartRepository.create({
+        customer,
+      });
+      await this.cartRepository.save(cart);
+    }
+
+    // Check if the item already exists in the cart
     let cartItem = await this.cartItemRepository.findOne({
       where: {
-        cart: { customer: { id: customerId } },
+        cart: { id: cart.id },
         menu: { id: menuId },
       },
       relations: ['cart', 'menu'],
     });
-  
-    if (cartItem) { // If the item is already in the cart
+
+    if (cartItem) {
+      // Update existing cart item
       cartItem.quantity += quantity;
       cartItem.totalPrice = cartItem.quantity * menu.price;
-  
       await this.cartItemRepository.save(cartItem);
-    } else { // If the item is not in the cart
-      const newCart = await this.cartRepository.findOne({
-        where: { customer: { id: customerId } },
-      });
-  
-      if (!newCart) {
-        throw new NotFoundException('Cart not found for customer');
-      }
-  
+    } else {
+      // Add new item to cart
       cartItem = this.cartItemRepository.create({
-        cart: newCart,
+        cart,
         menu,
         quantity,
         totalPrice: quantity * menu.price,
       });
-  
       await this.cartItemRepository.save(cartItem);
     }
-  
+
     return cartItem;
-  }  
-  
+  }
+
+  async getCustomer(token: string): Promise<Customer> {
+    try {
+      const payload = this.jwtService.verify(token, {
+        secret: jwtConstants.secret,
+      });
+
+      const customer = await this.customerRepository.findOne({
+        where: { id: payload.id },
+      });
+
+      if (!customer) {
+        throw new NotFoundException('Customer not found.');
+      }
+
+      return customer;
+    } catch (error) {
+      throw new UnauthorizedException('Invalid or expired token.');
+    }
+  }
 
   async removeFromCart(customerId: number, menuId: number): Promise<void> {
     const cart = await this.cartRepository.findOne({
@@ -121,7 +152,11 @@ export class CartService {
     await this.cartItemRepository.remove(cart.items);
   }
 
-  async updateCart(customerId: number, menuId: number, quantity: number): Promise<CartItem> {
+  async updateCart(
+    customerId: number,
+    menuId: number,
+    quantity: number,
+  ): Promise<CartItem> {
     const cart = await this.cartRepository.findOne({
       where: { customer: { id: customerId } },
       relations: ['items', 'items.menu'],

@@ -1,12 +1,19 @@
 "use client";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/api/api";
 import { FaEdit } from "react-icons/fa";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const CustomerPage = () => {
+  const router = useRouter();
   const { isLoggedIn, login, logout } = useAuthStore();
   const [customer, setCustomer] = useState({
     id: "",
@@ -31,9 +38,11 @@ const CustomerPage = () => {
           login();
         } else {
           logout();
+          router.push("/auth/signin");
         }
       } catch (error) {
         logout();
+        router.push("/auth/signin");
       }
     };
 
@@ -54,7 +63,7 @@ const CustomerPage = () => {
 
     checkAuth();
     fetchCustomerDetails();
-  }, [login, logout]);
+  }, [login, logout, router]);
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -82,116 +91,97 @@ const CustomerPage = () => {
     } catch (err) {
       console.error("Failed to update customer data", err);
     }
-  };  
+  };
 
   if (!isLoggedIn) {
-    return (
-      <div className="text-center p-10">
-        <h2 className="text-red-500">Please sign in to view this page.</h2>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <>
-      <Navbar customer={customer} />
-      <main className="container mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Customer Information</h1>
-        <div className="bg-white shadow-md rounded-lg p-6 max-w-md mx-auto relative">
-          <button
-            className="absolute top-4 right-4 text-primary hover:text-primary-600"
-            onClick={handleEditClick}
-          >
-            
-            <span className="flex items-center gap-1"><FaEdit />
-            Edit</span>
-          </button>
-
-          <div className="flex items-center mb-6">
-            <img
-              className="w-16 h-16 rounded-full mr-4"
-              src="https://i.pravatar.cc/150?u=a04258a2462d826712d"
-              alt="Customer Avatar"
-            />
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">{customer.name}</h2>
-              <p className="text-gray-600">{customer.email}</p>
-            </div>
-          </div>
-          <hr className="mb-6" />
-
-          {isEditing ? (
-            <div className="space-y-4">
-              {/* Edit Form */}
-              <div>
-                <label className="block text-gray-700 font-bold mb-1">
-                  Name:
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
+      <>
+        <Navbar />
+        <main className="container mx-auto p-6 mb-5">
+          <h1 className="text-3xl font-bold mb-6 text-primary">Customer Information</h1>
+          <Card className="max-w-md mx-auto">
+            <CardHeader>
+              <CardTitle className="flex justify-between items-center">
+                <span>Profile</span>
+                <Button variant="ghost" className="hover:text-primary" size="sm" onClick={handleEditClick}>
+                  <FaEdit className="mr-2" />
+                  Edit
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center mb-6">
+                <Avatar className="h-16 w-16 mr-4">
+                  <AvatarImage src="https://i.pravatar.cc/150?u=a04258a2462d826712d" alt="Customer Avatar" />
+                  <AvatarFallback>{customer.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h2 className="text-xl font-bold">{customer.name}</h2>
+                  <p className="text-muted-foreground">{customer.email}</p>
+                </div>
               </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-1">
-                  Address:
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
+              <div className="space-y-4">
+                {isEditing ? (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                            id="name"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address" >Address:</Label>
+                        <Input
+                            id="address"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input
+                            id="phone"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-4 mt-4">
+                        <Button variant="outline" onClick={handleCancelClick}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleSaveClick}>
+                          Save
+                        </Button>
+                      </div>
+                    </>
+                ) : (
+                    <>
+                      <div>
+                        <Label className="text-xl">Address:</Label>
+                        <p className="text-muted-foreground">{customer.address || "Not provided"}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xl">Phone:</Label>
+                        <p className="text-muted-foreground">{customer.phone || "Not provided"}</p>
+                      </div>
+                    </>
+                )}
               </div>
-              <div>
-                <label className="block text-gray-700 font-bold mb-1">
-                  Phone:
-                </label>
-                <input
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
-              </div>
-              <div className="flex justify-end space-x-4">
-                <button
-                  className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-                  onClick={handleCancelClick}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-primary text-white rounded hover:bg-primary-600"
-                  onClick={handleSaveClick}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              {/* Display Data */}
-              <p>
-                <strong className="text-gray-700">Address:</strong>{" "}
-                {customer.address || "Not provided"}
-              </p>
-              <p>
-                <strong className="text-gray-700">Phone:</strong>{" "}
-                {customer.phone || "Not provided"}
-              </p>
-            </div>
-          )}
-        </div>
-      </main>
-      <Footer />
-    </>
+            </CardContent>
+          </Card>
+        </main>
+        <Footer />
+      </>
   );
 };
 
 export default CustomerPage;
+

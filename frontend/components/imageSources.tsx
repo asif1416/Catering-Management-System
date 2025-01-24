@@ -2,7 +2,7 @@ import bg1 from "../images/bg1.png";
 import bg2 from "../images/bg2.jpg";
 import bg3 from "../images/bg3.jpg";
 import studentMeal from "../images/studentmeal.jpeg";
-import dinner from "../images/dinner.avif";
+import dinner from "../images/dinner.jpeg";
 import corporateLunchBox from "../images/corporateLunchBox.jpeg";
 import weddingBuffet from "../images/weedingBuffet.jpg";
 import partyPlatter from "../images/partyPlatter.webp"; 

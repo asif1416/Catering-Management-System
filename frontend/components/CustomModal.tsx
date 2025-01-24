@@ -1,26 +1,32 @@
+import React from 'react';
 import {
-    Modal,
-    ModalBody,
-    ModalContent,
-    ModalHeader,
-} from "@nextui-org/modal";
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 
-const CustomModal = ({title, isOpen, onClose , children }: {title: string; isOpen: boolean; onClose: () => void;  children: React.ReactNode;}) => {
+interface CustomModalProps {
+    title: string;
+    isOpen: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+}
+
+const CustomModal: React.FC<CustomModalProps> = ({ title, isOpen, onClose, children }) => {
     return (
-        <Modal isOpen={isOpen} onClose={onClose}
-               size={"md"}
-               className="bg-default-100"
-        >
-            <ModalContent>
-                <ModalHeader>
-                    <h2 className="text-lg">{title}</h2>
-                </ModalHeader>
-                <ModalBody>
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                </DialogHeader>
+                <div className="mt-4">
                     {children}
-                </ModalBody>
-            </ModalContent>
-        </Modal>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 };
 
 export default CustomModal;
+

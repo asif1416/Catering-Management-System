@@ -1,16 +1,28 @@
 "use client";
-import { Avatar, Link } from "@nextui-org/react";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/api/api";
+import logo from "@/images/CulinaryOdyssey.jpg";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  NavigationMenu,
+  NavigationMenuList,
+  NavigationMenuItem,
+  NavigationMenuLink,
+} from "@/components/ui/navigation-menu";
 
-const Navbar = ({
-  customer,
-}: {
-  customer: { name: string; image?: string } | null;
-}) => {
-  const { logout, isLoggedIn } = useAuthStore();
+const Navbar = () => {
+  const { logout, isLoggedIn, checkAuth } = useAuthStore();
   const router = useRouter();
+  const [customer, setCustomer] = useState<{
+    name: string;
+    image?: string;
+  } | null>(null);
 
   const handleSignIn = () => {
     router.push("/auth/signin");
@@ -18,7 +30,7 @@ const Navbar = ({
 
   const handleLogout = async () => {
     try {
-      const response = await api.get("/auth/logout");
+      await api.get("/auth/logout");
       logout();
     } catch {
       console.log("Failed to logout");
@@ -27,75 +39,95 @@ const Navbar = ({
     }
   };
 
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      try {
+        const isAuthenticated = await checkAuth();
+        if (isAuthenticated) {
+          const response = await api.get("/customer/");
+          setCustomer(response.data);
+        } else {
+          setCustomer(null);
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch customer data:", err);
+      }
+    };
+
+    fetchCustomerData();
+  }, [checkAuth]);
+
+
   return (
     <header className="p-5">
-      <nav className="bg-white border-gray-200">
-        <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
-          <Link href="/home" className="block py-2 px-3">
-            <span className="self-center text-2xl font-semibold whitespace-nowrap">
-              Welcome to <span className="text-primary">Culinary Odyssey</span>
-            </span>
-          </Link>
-          <div className="hidden w-full md:block md:w-auto" id="navbar-default">
-            <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white">
-              <li>
+      <div className="container bg-white mx-auto px-4 py-4 flex items-center justify-between">
+        <Link href="/home" className="flex items-center space-x-2">
+          <Image
+            alt="Culinary Odyssey logo"
+            className="rounded-full"
+            src={logo || "/placeholder.svg"}
+            width={40}
+            height={40}
+          />
+          <span className="text-xl font-semibold">
+            <span className="text-primary text-3xl">Culinary Odyssey</span>
+          </span>
+        </Link>
+
+        <NavigationMenu>
+          <NavigationMenuList className="gap-3">
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/home"
+                  className="font-bold text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Home
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/contact"
+                  className="font-bold text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Contact Us
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              {isLoggedIn ? (
+                <div className="flex items-center space-x-4">
                   <Link
-                    href="/home"
-                    className="block py-2 px-3 text-gray-800 hover:text-primary"
+                    href="/customer"
+                    className="flex items-center space-x-2"
                   >
-                    Home
+                    <Avatar>
+                      <AvatarImage
+                        src={
+                          customer?.image ||
+                          "https://i.pravatar.cc/150?u=a04258a2462d826712d"
+                        }
+                        alt="Customer Avatar"
+                      />
+                      <AvatarFallback>
+                        {customer?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-primary">
+                      {customer?.name}
+                    </span>
                   </Link>
-              </li>
-              <li>
-                  <Link
-                    href="/home"
-                    className="block py-2 px-3 text-gray-800 hover:text-primary"
-                  >
-                    Contact Us
-                  </Link>
-              </li>
-              <li>
-                {isLoggedIn ? (
-                  <div className="flex items-center space-x-4">
-                    <Link href="/customer">
-                      <div className="flex items-center space-x-4 cursor-pointer">
-                        {customer && (
-                          <>
-                            <Avatar
-                              isBordered
-                              color="primary"
-                              src={
-                                customer.image ||
-                                "https://i.pravatar.cc/150?u=a04258a2462d826712d"
-                              }
-                            />
-                            <span className="text-primary font-semibold">
-                              {customer.name}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </Link>
-                    <button
-                      className="block py-2 px-3 text-white bg-primary rounded hover:bg-primary-500"
-                      onClick={handleLogout}
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    className="block py-2 px-3 text-white bg-primary rounded hover:bg-primary-500"
-                    onClick={handleSignIn}
-                  >
-                    Sign in
-                  </button>
-                )}
-              </li>
-            </ul>
-          </div>
-        </div>
-      </nav>
+                  <Button onClick={handleLogout}>Logout</Button>
+                </div>
+              ) : (
+                <Button onClick={handleSignIn}>Sign in</Button>
+              )}
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
+      </div>
     </header>
   );
 };

@@ -24,6 +24,7 @@ export class MenuController {
     return this.menuService.getMenuItemsByCategory(category);
   }
 
+  @Public()
   @Get('/:id')
   async getMenuItemById(@Param('id') id: number): Promise<Menu> {
     return this.menuService.getMenuItemById(id);
