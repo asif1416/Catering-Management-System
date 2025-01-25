@@ -45,3 +45,18 @@ export const clearCart = async () => {
     throw new Error("Failed to clear cart");
   }
 };
+
+// place order
+export const order = async (
+  orderItems: { menuItemId: number; quantity: number }[]
+) => {
+  try {
+      const response = await api.post("/order/", {
+      items: orderItems, 
+    });
+
+    return response;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "Failed to place order");
+  }
+};

@@ -1,23 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, BeforeInsert, BeforeUpdate, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { Customer } from 'src/customer/customer.entity';
-import { Menu } from 'src/menu/menu.entity';
-import { Payment } from 'src/payment/payment.entity';
+import { OrderItem } from './orderItem.entity';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  quantity: number;
-
-  @ManyToOne(() => Menu)
-  @JoinColumn({ name: 'menu_id' })
-  menuItem: Menu;
-
   @ManyToOne(() => Customer)
   @JoinColumn({ name: 'customer_id' })
   customer: Customer;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
+  items: OrderItem[];
 
   @Column()
   totalPrice: number;
@@ -31,9 +33,6 @@ export class Order {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   startTime: Date;
 
-  @Column({ type: 'timestamp' })
+  @Column({ type: 'timestamp', nullable: true })
   endTime: Date;
-
-  // @OneToMany(() => Payment, (payment) => payment.order)
-  // payments: Payment[];
 }

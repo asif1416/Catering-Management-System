@@ -1,24 +1,15 @@
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsPositive } from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateOrderDto {
+  @IsArray()
   @IsNotEmpty()
-  @IsInt()
-  userId: number;
+  items: {
+    menuItemId: number;
+    quantity: number;
+  }[];
+}
 
-  @IsNotEmpty()
-  @IsInt()
+export class CartItemDto {
   menuItemId: number;
-
-  @IsNotEmpty()
-  @IsInt()
-  @IsPositive()
   quantity: number;
-
-  @IsOptional()
-  @IsDateString()
-  startTime?: string; 
-
-  @IsOptional()
-  @IsDateString()
-  endTime?: string; 
 }

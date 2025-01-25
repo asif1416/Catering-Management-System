@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
@@ -10,17 +10,16 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Heart, Trash2, MapPin, Minus, Plus } from "lucide-react";
-import { IoIosArrowBack } from "react-icons/io";
-
+import { Trash2, CheckCircle, Minus, Plus, CircleChevronLeft  } from "lucide-react";
 import {
   fetchCartItems,
   updateCartQuantity,
   removeCartItem,
   clearCart,
+  order,
 } from "@/api/cart";
 import toast from "react-hot-toast";
+import CustomModal from "@/components/CustomModal";
 
 export default function CartPage() {
   const router = useRouter();
@@ -35,6 +34,8 @@ export default function CartPage() {
   } = useCartStore();
   const [loading, setLoading] = useState(true);
   const [isAllSelected, setIsAllSelected] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orderDetails, setOrderDetails] = useState<any>({ items: [] });
 
   useEffect(() => {
     const initializeCart = async () => {
@@ -76,7 +77,7 @@ export default function CartPage() {
   const handleRemoveItem = async (cartItemId: number) => {
     try {
       await removeCartItem(cartItemId);
-      console.log("Item removed successfully");
+      toast.success("Item removed successfully");
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -85,8 +86,37 @@ export default function CartPage() {
   const handleDeleteSelected = async () => {
     try {
       await clearCart();
-      console.log("Cart cleared successfully");
+      toast.success("Selected items removed successfully");
     } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    try {
+      const selectedCartItems = items.filter((item) =>
+        selectedItems.has(item.id)
+      );
+      const orderItems = selectedCartItems.map((item) => ({
+        menuItemId: item.menuId,
+        quantity: item.quantity,
+      }));
+
+      //console.log("Sending order items to backend:", orderItems); 
+
+      const response = await order(orderItems);
+
+      if (!response || !response.data || !response.data.order) {
+        throw new Error("Failed to place order or invalid response");
+      }
+
+      console.log("Order Details to set in state:", response.data.order); // Debugging
+
+      // Set the order details with the nested `menuItem` structure
+      setOrderDetails(response.data.order); // Set to response.order, not response
+      setIsModalOpen(true); // Open the modal
+    } catch (error: any) {
+      console.error("Error placing order:", error); // Debugging
       toast.error(error.message);
     }
   };
@@ -145,7 +175,7 @@ export default function CartPage() {
           variant="outline"
           className="mb-4 flex items-center hover:text-primary"
         >
-          <IoIosArrowBack className="mr-2" />
+          <CircleChevronLeft className="mr-2" />
           Go Back
         </Button>
         <div className="flex flex-col lg:flex-row gap-8">
@@ -188,7 +218,7 @@ export default function CartPage() {
                   <p className="text-center mb-4">Your cart is empty.</p>
                   <Button
                     className="w-full"
-                    onClick={() => router.push("/menu")}
+                    onClick={() => router.push("/home")}
                   >
                     Browse Menu
                   </Button>
@@ -265,76 +295,92 @@ export default function CartPage() {
           <div className="lg:w-1/3">
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-6">
-                  <MapPin className="h-4 w-4" />
-                  <h2 className="font-medium">Location</h2>
-                </div>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Feni Sadar, Feni, Chattogram
-                </p>
                 <h2 className="font-medium mb-4">Order Summary</h2>
-                <div className="space-y-4">
-                  {Array.from(selectedItems).map((itemId) => {
-                    const item = items.find((item) => item.id === itemId);
-                    if (!item) return null;
-
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex justify-between text-sm text-muted-foreground"
-                      >
-                        <span>
-                          {item.name} (x{item.quantity})
-                        </span>
-                        <span>${(item.price * item.quantity).toFixed(2)}</span>
-                      </div>
-                    );
-                  })}
-                  <Separator />
-                  <div className="flex justify-between text-sm">
-                    <span>Subtotal ({selectedItems.size} items)</span>
-                    <span>
-                      $
-                      {Array.from(selectedItems)
-                        .reduce((sum, itemId) => {
-                          const item = items.find((item) => item.id === itemId);
-                          return sum + (item ? item.price * item.quantity : 0);
-                        }, 0)
-                        .toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Shipping Fee</span>
-                    <span>${shippingFee.toFixed(2)}</span>
-                  </div>
-                  <Separator />
-                  <div className="flex justify-between font-medium">
-                    <span>Total</span>
-                    <span className="text-primary">
-                      $
-                      {Array.from(selectedItems)
-                        .reduce((sum, itemId) => {
-                          const item = items.find((item) => item.id === itemId);
-                          return sum + (item ? item.price * item.quantity : 0);
-                        }, shippingFee)
-                        .toFixed(2)}
-                    </span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    disabled={selectedItems.size === 0}
-                    onClick={() => router.push("/checkout")}
-                  >
-                    PROCEED TO CHECKOUT ({selectedItems.size})
-                  </Button>
-                </div>
+                {/* Order summary details */}
+                <Button
+                  className="w-full"
+                  disabled={selectedItems.size === 0}
+                  onClick={handlePlaceOrder}
+                >
+                  PLACE ORDER ({selectedItems.size})
+                </Button>
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
       <Footer />
+
+      <CustomModal
+        title="Order Successful"
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      >
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <CheckCircle className="h-12 w-12 text-primary" />
+          </div>
+
+          <p className="text-lg font-semibold text-primary text-center">
+            Your order has been placed successfully!
+          </p>
+
+          {/* Order Details */}
+          <div className="bg-white p-4 rounded-lg">
+            <h3 className="font-medium text-lg mb-4">Order Details</h3>
+            {orderDetails &&
+            orderDetails.items &&
+            orderDetails.items.length > 0 ? (
+              <ul className="space-y-3">
+                {orderDetails.items.map((item: any) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center bg-neutral-100 p-3 rounded-lg shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-muted font-medium">
+                        {item.menuItem.name}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        (x{item.quantity})
+                      </span>
+                    </div>
+                    <span className="text-muted font-semibold">
+                      ${item.menuItem.price}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-muted">No order details available.</p>
+            )}
+          </div>
+
+          {/* Total Price */}
+          {orderDetails && (
+            <div className="bg-white p-4 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-gray-700">
+                  Total Price:
+                </span>
+                <span className="text-xl font-semibold text-primary">
+                  ${orderDetails.totalPrice}
+                </span>
+              </div>
+            </div>
+          )}
+
+          <Button
+            className="w-full mt-6 bg-primary text-white"
+            onClick={() => {
+              setIsModalOpen(false);
+              router.push("/orders");
+            }}
+          >
+            View My Orders
+          </Button>
+        </div>
+      </CustomModal>
     </>
   );
 }
-

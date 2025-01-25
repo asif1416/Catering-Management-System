@@ -6,10 +6,8 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Patch,
   Req,
 } from '@nestjs/common';
-import { Request } from 'express';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './order.dto';
 
@@ -17,21 +15,19 @@ import { CreateOrderDto } from './order.dto';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @Post('/create')
-  async createOrder(@Req() req: Request, @Body() createOrderDto: CreateOrderDto) {
-    const token = req.cookies['auth-token'] || req.headers['authorization'];
+  @Post('/')
+  async createOrder(
+    @Req() request: any,
+    @Body() createOrderDto: CreateOrderDto,
+  ) {
+    const token =
+      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
     if (!token) {
       throw new NotFoundException('Token not found');
     }
 
     try {
-      const order = await this.orderService.createOrder(
-        token,
-        createOrderDto.menuItemId,
-        createOrderDto.quantity,
-        createOrderDto.startTime,
-        createOrderDto.endTime,
-      );
+      const order = await this.orderService.createOrder(token, createOrderDto);
       return {
         message: 'Order created successfully',
         order,
@@ -45,8 +41,12 @@ export class OrderController {
   }
 
   @Post('/cancel')
-  async cancelOrder(@Req() req: Request, @Body() { orderId }: { orderId: number }) {
-    const token = req.cookies['auth-token'] || req.headers['authorization'];
+  async cancelOrder(
+    @Req() request: any,
+    @Body() { orderId }: { orderId: number },
+  ) {
+    const token =
+      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
     if (!token) {
       throw new NotFoundException('Token not found');
     }
@@ -66,8 +66,9 @@ export class OrderController {
   }
 
   @Get('/orders')
-  async getAllOrders(@Req() req: Request) {
-    const token = req.cookies['auth-token'] || req.headers['authorization'];
+  async getAllOrders(@Req() request: any) {
+    const token =
+      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
     if (!token) {
       throw new NotFoundException('Token not found');
     }
@@ -76,8 +77,12 @@ export class OrderController {
   }
 
   @Get('/orders/:id')
-  async getOrderById(@Req() req: Request, @Param('id', ParseIntPipe) orderId: number) {
-    const token = req.cookies['auth-token'] || req.headers['authorization'];
+  async getOrderById(
+    @Req() request: any,
+    @Param('id', ParseIntPipe) orderId: number,
+  ) {
+    const token =
+      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
     if (!token) {
       throw new NotFoundException('Token not found');
     }

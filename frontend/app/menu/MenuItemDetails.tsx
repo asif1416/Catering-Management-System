@@ -15,6 +15,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from 'lucide-react';
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/api/api";
+import { order } from "@/api/cart"
 import toast from "react-hot-toast";
 
 interface MenuItem {
@@ -66,47 +67,56 @@ export default function MenuItemDetails({ menuItem }: { menuItem: MenuItem }) {
     };
 
     const handlePlaceOrder = async () => {
-        if (!isLoggedIn) {
-            toast.error("Please login to place an order");
-            router.push('/auth/signin');
-            return;
+      if (!isLoggedIn) {
+        toast.error("Please login to place an order");
+        router.push("/auth/signin");
+        return;
+      }
+
+      if (quantity < 1) {
+        toast.error("Please select a valid quantity");
+        return;
+      }
+
+      if (!startDate || !endDate) {
+        toast.error("Please select start and end dates");
+        return;
+      }
+
+      if (startDate > endDate) {
+        toast.error("End date must be after start date");
+        return;
+      }
+
+      if (!address.trim()) {
+        toast.error("Please provide a valid address");
+        return;
+      }
+
+      try {
+        setIsPlacingOrder(true);
+        const orderItem = [
+          {
+            menuItemId: menuItem.id,
+            quantity: quantity,
+          },
+        ];
+
+        const response = await order(orderItem);
+
+        if (response.data && response.data.message) {
+          toast.success(response.data.message);
+        } else {
+          toast.success("Order placed successfully!");
         }
 
-        if (quantity < 1) {
-            toast.error("Please select a valid quantity");
-            return;
-        }
-
-        if (!startDate || !endDate) {
-            toast.error("Please select start and end dates");
-            return;
-        }
-
-        if (startDate > endDate) {
-            toast.error("End date must be after start date");
-            return;
-        }
-
-        if (!address.trim()) {
-            toast.error("Please provide a valid address");
-            return;
-        }
-
-        try {
-            setIsPlacingOrder(true);
-            const response = await api.post('/order/create', {
-                menuItemId: menuItem.id,
-                quantity,
-                startTime: startDate.toISOString(),
-                endTime: endDate.toISOString(),
-                address
-            });
-            toast.success(response.data.message || "Order placed successfully");
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || "Failed to place order");
-        } finally {
-            setIsPlacingOrder(false);
-        }
+        router.push("/orders");
+      } catch (error: any) {
+        //console.error("Error placing order:", error);
+        toast.error(error.response?.data?.message || "Failed to place order");
+      } finally {
+        setIsPlacingOrder(false);
+      }
     };
 
     const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {

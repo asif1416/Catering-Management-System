@@ -8,11 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
-const EnterEmail = ({
-                        isOpen,
-                        onClose,
-                        onSubmit,
-                    }: {
+const EnterEmail = ({isOpen,onClose,onSubmit,}: {
     isOpen: boolean;
     onClose: () => void;
     onSubmit: (email: string) => void;

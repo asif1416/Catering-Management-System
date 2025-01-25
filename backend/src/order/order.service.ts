@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -9,6 +10,7 @@ import { Order } from './order.entity';
 import { MenuService } from '../menu/menu.service';
 import { CustomerService } from '../customer/customer.service';
 import { MailerService } from '@nestjs-modules/mailer';
+import { CreateOrderDto } from './order.dto';
 
 @Injectable()
 export class OrderService {
@@ -27,33 +29,22 @@ export class OrderService {
         : 'N/A';
     };
 
+    const itemDetails = order.items
+      .map(
+        (item) =>
+          `<p>${item.menuItem.name} - ৳${item.menuItem.price} x ${item.quantity}</p>`,
+      )
+      .join('');
+
     const message = `
-      <html>
-        <body style="font-family: Arial, sans-serif; padding: 20px;">
-          <div style="max-width: 600px; margin: auto; padding: 20px; background-color: #f4f4f4; border-radius: 8px;">
-            <div style="background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
-              <h2 style="text-align: center; color: #f49b33;">Order Receipt - Culinary Odyssey</h2>
-              <hr style="border: 1px solid #ddd;">
-              <p><strong>Customer Name:</strong> ${order.customer.name}</p>
-              <p><strong>Email:</strong> ${email}</p>
-              <hr style="border: 1px solid #ddd;">
-              <p><strong>Menu Item:</strong> ${order.menuItem.name}</p>
-              <p><strong>Quantity:</strong> ${order.quantity}</p>
-              <p><strong>Price per Item:</strong> ৳${order.menuItem.price.toFixed(2)}</p>
-              <hr style="border: 1px solid #ddd;">
-              <p><strong>Total Price:</strong> ৳${order.totalPrice.toFixed(2)}</p>
-              <p><strong>Status:</strong> ${order.status}</p>
-              <hr style="border: 1px solid #ddd;">
-              <p><strong>Order Time:</strong> ${formatDate(order.createdAt)}</p>
-              <p><strong>Start Time:</strong> ${formatDate(order.startTime)}</p>
-              <p><strong>End Time:</strong> ${formatDate(order.endTime)}</p>
-              <hr style="border: 1px solid #ddd;">
-              <p style="text-align: center; color: #f49b33;">Thank you for your order!</p>
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+  <html>
+    <body>
+      <h2>Order Receipt</h2>
+      <div>${itemDetails}</div>
+      <p>Total Price: ৳${order.totalPrice}</p>
+    </body>
+  </html>
+`;
 
     await this.mailerService.sendMail({
       to: email,
@@ -62,35 +53,47 @@ export class OrderService {
     });
   }
 
-  async createOrder(
-    token: string,
-    menuItemId: number,
-    quantity: number,
-    startTime?: string,
-    endTime?: string,
-  ): Promise<Order> {
+  async createOrder(token: string, createOrderDto: CreateOrderDto): Promise<Order> {
+  try {
     const customer = await this.customerService.getCustomer(token);
 
-    const menuItem = await this.menuService.getMenuItemById(menuItemId);
-    if (!menuItem) {
-      throw new NotFoundException('Menu item not found');
-    }
+    const orderItems = [];
+    let totalPrice = 0;
 
-    const totalPrice = menuItem.price * quantity;
+    for (const item of createOrderDto.items) {
+      const menuItem = await this.menuService.getMenuItemById(item.menuItemId);
+      console.log('Menu Item:', menuItem);
+
+      if (!menuItem) {
+        throw new NotFoundException(`Menu item ${item.menuItemId} not found`);
+      }
+
+      const itemTotalPrice = menuItem.price * item.quantity;
+      totalPrice += itemTotalPrice;
+
+      orderItems.push({
+        menuItem,
+        quantity: item.quantity,
+        totalPrice: itemTotalPrice,
+      });
+    }
 
     const order = this.orderRepository.create({
       customer,
-      menuItem,
-      quantity,
+      items: orderItems,
       totalPrice,
-      startTime: startTime,
-      endTime: endTime,
+      status: 'pending',
     });
 
     await this.orderRepository.save(order);
     await this.sendReciept(customer.email, order);
+
     return order;
+  } catch (error) {
+    // console.error('Error in createOrder:', error);
+    throw new InternalServerErrorException('Failed to create order');
   }
+}
 
   async cancelOrder(token: string, orderId: number): Promise<Order> {
     const customer = await this.customerService.getCustomer(token);
