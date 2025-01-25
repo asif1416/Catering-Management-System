@@ -1,5 +1,16 @@
 import api from "@/api/api";
 
+// add to cart
+export const addToCart = async (menuId: number, quantity: number) => {
+  try {
+    const response = await api.post("/cart/add", { menuId, quantity });
+    return response; 
+  } catch (error) {
+    console.error("Failed to add item to cart:", error);
+    throw new Error("Failed to add item to cart");
+  }
+};
+
 // fetch cart items
 export const fetchCartItems = async () => {
   try {

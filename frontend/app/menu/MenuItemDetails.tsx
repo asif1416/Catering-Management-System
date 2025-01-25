@@ -15,7 +15,7 @@ import { format } from "date-fns";
 import { CalendarIcon } from 'lucide-react';
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/api/api";
-import { order } from "@/api/cart"
+import { addToCart ,order } from "@/api/cart"
 import toast from "react-hot-toast";
 
 interface MenuItem {
@@ -54,10 +54,8 @@ export default function MenuItemDetails({ menuItem }: { menuItem: MenuItem }) {
 
         try {
             setIsAddingToCart(true);
-            const response = await api.post('/cart/add', {
-                menuId: menuItem.id,
-                quantity: quantity
-            });
+            const response = await addToCart(menuItem.id, quantity
+            );
             toast.success(response.data.message || "Item added to cart");
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Failed to add item to cart");
