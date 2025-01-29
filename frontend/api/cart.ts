@@ -18,7 +18,6 @@ export const fetchCartItems = async () => {
     return response.data.cart?.items || [];
   } catch (error) {
     console.error("Failed to fetch cart:", error);
-    throw new Error("Failed to load cart items");
   }
 };
 

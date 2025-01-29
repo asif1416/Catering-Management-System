@@ -21,8 +21,6 @@ export default async function MenuItemPage({
     notFound();
   }
 
-  //console.log("Fetched menu item:", menuItem);
-
   return (
     <>
       <Navbar />

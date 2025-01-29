@@ -7,6 +7,9 @@ import {
   Param,
   ParseIntPipe,
   Req,
+  Patch,
+  BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './order.dto';
@@ -40,32 +43,32 @@ export class OrderController {
     }
   }
 
-  @Post('/cancel')
-  async cancelOrder(
-    @Req() request: any,
-    @Body() { orderId }: { orderId: number },
-  ) {
-    const token =
-      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
-    if (!token) {
-      throw new NotFoundException('Token not found');
-    }
-
-    try {
-      const order = await this.orderService.cancelOrder(token, orderId);
-      return {
-        message: 'Order cancelled successfully',
-        order,
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error('Failed to cancel order');
-    }
+  @Patch('/cancel')
+async cancelOrder(
+  @Req() request: any,
+  @Body() { orderId }: { orderId: number },
+) {
+  const token =
+    request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
+  if (!token) {
+    throw new NotFoundException('Token not found');
   }
 
-  @Get('/orders')
+  try {
+    const order = await this.orderService.cancelOrder(token, orderId);
+    return {
+      message: 'Order cancelled successfully',
+      order,
+    };
+  } catch (error) {
+    if (error instanceof NotFoundException || error instanceof BadRequestException) {
+      throw error;
+    }
+    throw new InternalServerErrorException('Failed to cancel order');
+  }
+}
+
+  @Get('/')
   async getAllOrders(@Req() request: any) {
     const token =
       request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
@@ -76,28 +79,4 @@ export class OrderController {
     return this.orderService.getOrders(token);
   }
 
-  @Get('/orders/:id')
-  async getOrderById(
-    @Req() request: any,
-    @Param('id', ParseIntPipe) orderId: number,
-  ) {
-    const token =
-      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
-    if (!token) {
-      throw new NotFoundException('Token not found');
-    }
-
-    try {
-      const order = await this.orderService.getOrderById(token, orderId);
-      return {
-        message: `Order retrieved: ${orderId}`,
-        order,
-      };
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new Error('Failed to get order');
-    }
-  }
 }

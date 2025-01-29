@@ -42,6 +42,7 @@ const CustomerPage = () => {
         }
       } catch (error) {
         logout();
+        console.log("Failed to validate user", error);
         router.push("/auth/signin");
       }
     };
@@ -61,8 +62,8 @@ const CustomerPage = () => {
       }
     };
 
-    checkAuth();
-    fetchCustomerDetails();
+    checkAuth().then(r => r);
+    fetchCustomerDetails().then(r => r);
   }, [login, logout, router]);
 
   const handleEditClick = () => {

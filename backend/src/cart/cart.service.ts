@@ -112,9 +112,9 @@ export class CartService {
       relations: ['items', 'items.menu'],
     });
 
-    if (!cart) {
-      throw new NotFoundException('Cart not found.');
-    }
+    // if (!cart) {
+    //   throw new NotFoundException('Cart not found.');
+    // }
 
     // Find the specific cart item by cartItemId
     const cartItem = cart.items.find((item) => item.id === cartItemId);
@@ -132,9 +132,9 @@ export class CartService {
       relations: ['items', 'items.menu'],
     });
 
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    // if (!cart) {
+    //   throw new NotFoundException('Cart not found');
+    // }
 
     return cart;
   }
@@ -145,9 +145,9 @@ export class CartService {
       relations: ['items'],
     });
 
-    if (!cart) {
-      throw new NotFoundException('Cart not found');
-    }
+    // if (!cart) {
+    //   throw new NotFoundException('Cart not found');
+    // }
 
     await this.cartItemRepository.remove(cart.items);
   }

@@ -1,22 +1,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { StaticImageData } from "next/image";
-
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  available: boolean;
-}
+import { MenuItem } from "@/types/types"
 
 interface FoodCardsProps {
   cards: MenuItem[];
-  images: { src: string | StaticImageData; alt: string }[];
 }
 
-export default function MenuCards({ cards, images }: FoodCardsProps) {
+export default function MenuCards({ cards }: FoodCardsProps) {
   const router = useRouter();
 
   const handleCardClick = (id: number) => {
@@ -29,7 +19,7 @@ export default function MenuCards({ cards, images }: FoodCardsProps) {
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 overflow-y-auto"
         style={{ maxHeight: "820px" }}
       >
-        {cards.map((card, index) => (
+        {cards.map((card) => (
           <div
             key={card.id}
             className="bg-white rounded-lg shadow-md overflow-hidden cursor-pointer"
@@ -37,8 +27,8 @@ export default function MenuCards({ cards, images }: FoodCardsProps) {
           >
             <div className="relative h-48">
               <Image
-                src={images[index]?.src || "/placeholder.svg"}
-                alt={images[index]?.alt || "Menu Item Image"}
+                src={`/images/${card.image}`}
+                alt={"Menu Item Image"}
                 layout="fill"
                 objectFit="cover"
               />

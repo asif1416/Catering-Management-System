@@ -4,16 +4,16 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Footer from "@/components/Footer";
 import Navbar from "@/components/Navbar";
-import foodBG from "@/images/foodBG.png";
-import { FaGooglePlay, FaApple, FaCartPlus } from "react-icons/fa";
-import { useRouter } from "next/navigation";
-import { carouselImages } from "@/components/imageSources";
-import { menuCardImages } from "@/components/imageSources";
+import foodBG from "@/public/images/foodBG.png";
+import bg1 from "@/public/images/bg1.png";
+import bg2 from "@/public/images/bg2.jpg";
+import bg3 from "@/public/images/bg3.jpg";
+
+
 import { useAuthStore } from "@/store/auth-store";
 import debounce from "lodash.debounce";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import MenuCards from "@/components/MenuCards";
 
 import {
@@ -26,20 +26,24 @@ import {
 
 import { fetchMenuData, searchMenuItems } from "@/api/home"; 
 import toast from "react-hot-toast";
+import { FaApple, FaGooglePlay } from "react-icons/fa";
+import Loader from "@/components/Loader";
 
 export default function Home() {
-  const { login, logout, isLoggedIn, checkAuth } = useAuthStore();
+  const {  logout, checkAuth } = useAuthStore();
+
   const [menuData, setMenuData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [error, setError] = useState(null);
 
-  const router = useRouter();
-  const [cartCount, setCartCount] = useState(0);
 
-  const handleCartClick = () => {
-    router.push("/cart");
-  };
+  const carouselImages = [
+    { src: bg1, alt: "Image 1" },
+    { src: bg2, alt: "Image 2" },
+    { src: bg3, alt: "Image 3" },
+  ];
+
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -91,12 +95,12 @@ export default function Home() {
         <section className="container mx-auto my-8">
           <Carousel className="w-full max-w-6xl mx-auto">
             <CarouselContent>
-              {carouselImages.map((image, index) => (
+              {carouselImages.map((item, index) => (
                 <CarouselItem key={index}>
                   <div className="p-1">
                     <Image
-                      src={image.src}
-                      alt={image.alt}
+                      src={item.src}
+                      alt={item.alt}
                       width={800}
                       height={400}
                       className="w-full h-[400px] object-cover rounded-lg"
@@ -127,13 +131,14 @@ export default function Home() {
           </div>
           <div className="mt-2 border-t border-primary" />
           {loading ? (
-            <p>Loading...</p>
+            <div>
+              <Loader />
+            </div>
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : (
             <MenuCards
               cards={searchResults.length > 0 ? searchResults : menuData}
-              images={menuCardImages}
             />
           )}
         </section>
@@ -177,18 +182,6 @@ export default function Home() {
         </section>
       </main>
       <Footer />
-      <Button
-        variant="default"
-        size="icon"
-        className="fixed bottom-5 right-5 rounded-full p-3 shadow-lg"
-        onClick={handleCartClick}
-      >
-        <Badge variant="destructive" className="absolute -top-2 -right-2">
-          {cartCount}
-        </Badge>
-        <FaCartPlus className="h-6 w-6" />
-        <span className="sr-only">Open cart</span>
-      </Button>
     </>
   );
 }
