@@ -20,6 +20,8 @@ import {
 } from "@/api/cart";
 import toast from "react-hot-toast";
 import CustomModal from "@/components/CustomModal";
+import {Separator} from "@/components/ui/separator";
+import Loader from "@/components/Loader";
 
 export default function CartPage() {
   const router = useRouter();
@@ -44,6 +46,7 @@ export default function CartPage() {
       if (isAuth) {
         try {
           const cartItems = await fetchCartItems();
+          console.log("Fetched Cart Items:", cartItems);
           const formattedItems = cartItems.map((item: any) => ({
             id: item.id,
             menuId: item.menu.id,
@@ -62,6 +65,7 @@ export default function CartPage() {
 
     initializeCart();
   }, [checkAuth, setItems]);
+
 
   const handleUpdateQuantity = async (itemId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -102,7 +106,7 @@ export default function CartPage() {
         quantity: item.quantity,
       }));
 
-      //console.log("Sending order items to backend:", orderItems); 
+      //console.log("Sending order items to backend:", orderItems);
 
       const response = await order(orderItems);
 
@@ -110,18 +114,15 @@ export default function CartPage() {
         throw new Error("Failed to place order or invalid response");
       }
 
-      console.log("Order Details to set in state:", response.data.order); // Debugging
+      console.log("Order Details to set in state:", response.data.order);
 
-      // Set the order details with the nested `menuItem` structure
-      setOrderDetails(response.data.order); // Set to response.order, not response
-      setIsModalOpen(true); // Open the modal
+      setOrderDetails(response.data.order);
+      setIsModalOpen(true);
     } catch (error: any) {
-      console.error("Error placing order:", error); // Debugging
+      //console.error("Error placing order:", error);
       toast.error(error.message);
     }
   };
-
-  const handleBack = () => router.back();
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -158,9 +159,7 @@ export default function CartPage() {
     return (
       <>
         <Navbar />
-        <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
-          <p>Loading...</p>
-        </div>
+          <Loader />
         <Footer />
       </>
     );
@@ -170,14 +169,6 @@ export default function CartPage() {
     <>
       <Navbar />
       <main className="container mx-auto px-4 py-8">
-        <Button
-          onClick={handleBack}
-          variant="outline"
-          className="mb-4 flex items-center hover:text-primary"
-        >
-          <CircleChevronLeft className="mr-2" />
-          Go Back
-        </Button>
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-2/3">
             <div className="flex items-center justify-between mb-4">
@@ -235,7 +226,7 @@ export default function CartPage() {
                           onCheckedChange={() => toggleItemSelection(item.id)}
                         />
                         <Image
-                          src={item.image || "/placeholder.svg"}
+                          src={`/images/${item.image}`}
                           alt={item.name}
                           width={80}
                           height={80}
@@ -296,14 +287,58 @@ export default function CartPage() {
             <Card>
               <CardContent className="p-6">
                 <h2 className="font-medium mb-4">Order Summary</h2>
-                {/* Order summary details */}
-                <Button
-                  className="w-full"
-                  disabled={selectedItems.size === 0}
-                  onClick={handlePlaceOrder}
-                >
-                  PLACE ORDER ({selectedItems.size})
-                </Button>
+                <div className="space-y-4">
+                  {Array.from(selectedItems).map((itemId) => {
+                    const item = items.find((item) => item.id === itemId);
+                    if (!item) return null;
+
+                    return (
+                        <div key={item.id} className="flex justify-between text-sm text-muted-foreground">
+                        <span>
+                          {item.name} (x{item.quantity})
+                        </span>
+                          <span>${(item.price * item.quantity).toFixed(2)}</span>
+                        </div>
+                    );
+                  })}
+                  <Separator />
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal ({selectedItems.size} items)</span>
+                    <span>
+                      $
+                      {Array.from(selectedItems)
+                          .reduce((sum, itemId) => {
+                            const item = items.find((item) => item.id === itemId);
+                            return sum + (item ? item.price * item.quantity : 0);
+                          }, 0)
+                          .toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>Shipping Fee</span>
+                    <span>${shippingFee.toFixed(2)}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between font-medium">
+                    <span>Total</span>
+                    <span className="text-primary">
+                      $
+                      {Array.from(selectedItems)
+                          .reduce((sum, itemId) => {
+                            const item = items.find((item) => item.id === itemId);
+                            return sum + (item ? item.price * item.quantity : 0);
+                          }, shippingFee)
+                          .toFixed(2)}
+                    </span>
+                  </div>
+                  <Button
+                      className="w-full"
+                      disabled={selectedItems.size === 0}
+                      onClick={handlePlaceOrder}
+                  >
+                    PLACE ORDER ({selectedItems.size})
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

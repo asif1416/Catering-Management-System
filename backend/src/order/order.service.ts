@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -53,79 +54,78 @@ export class OrderService {
     });
   }
 
-  async createOrder(token: string, createOrderDto: CreateOrderDto): Promise<Order> {
-  try {
-    const customer = await this.customerService.getCustomer(token);
+  async createOrder(
+    token: string,
+    createOrderDto: CreateOrderDto,
+  ): Promise<Order> {
+    try {
+      const customer = await this.customerService.getCustomer(token);
 
-    const orderItems = [];
-    let totalPrice = 0;
+      const orderItems = [];
+      let totalPrice = 0;
 
-    for (const item of createOrderDto.items) {
-      const menuItem = await this.menuService.getMenuItemById(item.menuItemId);
-      console.log('Menu Item:', menuItem);
+      for (const item of createOrderDto.items) {
+        const menuItem = await this.menuService.getMenuItemById(
+          item.menuItemId,
+        );
+        console.log('Menu Item:', menuItem);
 
-      if (!menuItem) {
-        throw new NotFoundException(`Menu item ${item.menuItemId} not found`);
+        if (!menuItem) {
+          throw new NotFoundException(`Menu item ${item.menuItemId} not found`);
+        }
+
+        const itemTotalPrice = menuItem.price * item.quantity;
+        totalPrice += itemTotalPrice;
+
+        orderItems.push({
+          menuItem,
+          quantity: item.quantity,
+          totalPrice: itemTotalPrice,
+        });
       }
 
-      const itemTotalPrice = menuItem.price * item.quantity;
-      totalPrice += itemTotalPrice;
-
-      orderItems.push({
-        menuItem,
-        quantity: item.quantity,
-        totalPrice: itemTotalPrice,
+      const order = this.orderRepository.create({
+        customer,
+        items: orderItems,
+        totalPrice,
+        status: 'pending',
       });
+
+      await this.orderRepository.save(order);
+      await this.sendReciept(customer.email, order);
+
+      return order;
+    } catch (error) {
+      // console.error('Error in createOrder:', error);
+      throw new InternalServerErrorException('Failed to create order');
     }
-
-    const order = this.orderRepository.create({
-      customer,
-      items: orderItems,
-      totalPrice,
-      status: 'pending',
-    });
-
-    await this.orderRepository.save(order);
-    await this.sendReciept(customer.email, order);
-
-    return order;
-  } catch (error) {
-    // console.error('Error in createOrder:', error);
-    throw new InternalServerErrorException('Failed to create order');
   }
+
+async cancelOrder(token: string, orderId: number): Promise<Order> {
+  const customer = await this.customerService.getCustomer(token);
+
+  const order = await this.orderRepository.findOne({
+    where: { id: orderId, customer: { id: customer.id } },
+  });
+
+  if (!order) {
+    throw new NotFoundException('Order not found');
+  }
+
+  if (order.status === 'cancelled') {
+    throw new BadRequestException('Order is already cancelled');
+  }
+
+  order.status = 'cancelled';
+  return this.orderRepository.save(order);
 }
-
-  async cancelOrder(token: string, orderId: number): Promise<Order> {
-    const customer = await this.customerService.getCustomer(token);
-
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId, customer: { id: customer.id } },
-    });
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
-    order.status = 'cancelled';
-    return this.orderRepository.save(order);
-  }
 
   async getOrders(token: string): Promise<Order[]> {
     const customer = await this.customerService.getCustomer(token);
 
     return this.orderRepository.find({
       where: { customer: { id: customer.id } },
+      relations: ['items', 'items.menuItem'],
     });
-  }
-
-  async getOrderById(token: string, orderId: number): Promise<Order> {
-    const customer = await this.customerService.getCustomer(token);
-
-    const order = await this.orderRepository.findOne({
-      where: { id: orderId, customer: { id: customer.id } },
-    });
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-    return order;
   }
 }

@@ -1,20 +1,12 @@
 import api from "@/api/api";
+import { MenuItem } from "@/types/types";
 
-interface MenuItem {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  available: boolean;
-}
-
-export async function fetchMenuItem(id: string): Promise<MenuItem | null> {
+export async function fetchMenuItem(id: string): Promise<MenuItem> {
   try {
     const response = await api.get(`/menu/${id}`);
     return response.data;
   } catch (error) {
     console.error("Failed to fetch menu item:", error);
-    return null;
+    throw new Error("Failed to fetch menu item");
   }
 }

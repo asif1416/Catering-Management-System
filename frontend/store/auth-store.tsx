@@ -21,9 +21,9 @@ checkAuth: async () => {
     }
   } catch (error: any) {
     if (error.response && error.response.status === 401) {
-      console.warn("User not authenticated");
+      console.log("User not authenticated");
     } else {
-      console.error("Auth check failed:", error);
+      console.log("Auth check failed:", error);
     }
     set({ isLoggedIn: false });
     return false;

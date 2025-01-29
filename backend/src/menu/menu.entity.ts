@@ -21,6 +21,9 @@ export class Menu {
   @Column({ default: true })
   available: boolean;
 
+  @Column({ nullable: true }) 
+  image: string; 
+
   @OneToMany(() => CartItem, (cartItem) => cartItem.menu)
   cartItems: CartItem[];
 }

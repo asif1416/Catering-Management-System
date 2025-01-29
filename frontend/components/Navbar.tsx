@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/store/auth-store";
 import api from "@/api/api";
-import logo from "@/images/CulinaryOdyssey.jpg";
+import logo from "@/public/images/CulinaryOdyssey.jpg";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -93,6 +93,16 @@ const Navbar = () => {
                   className="font-bold text-muted-foreground transition-colors hover:text-primary"
                 >
                   Contact Us
+                </Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild>
+                <Link
+                  href="/orders"
+                  className="font-bold text-muted-foreground transition-colors hover:text-primary"
+                >
+                  Orders
                 </Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
