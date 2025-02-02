@@ -59,7 +59,7 @@ export class OrderService {
             text-align: center;
           }
           table {
-            width: 100%;
+            width: 100%;v
             border-collapse: collapse;
             margin-bottom: 20px;
           }
