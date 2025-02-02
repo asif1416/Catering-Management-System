@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import loginBG from "@/images/loginBg.png";
+import loginBG from "@/public/images/loginBg.png";
 import { useState } from "react";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Loader from "@/components/Loader";
 
 const validationSchema = Yup.object({
   email: Yup.string()
@@ -51,7 +52,6 @@ const SignIn = () => {
       toast.success(response.data.message);
       login();
       setEmail(email);
-      setIsOtpModalOpen(true);
       router.push("/");
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Login failed.");
@@ -87,6 +87,10 @@ const SignIn = () => {
     setIsResetModalOpen(false);
     toast.success("Password reset successfully!");
   };
+
+  if(isLoading) {
+    return <Loader />;
+  }
 
   return (
       <div className="flex min-h-screen">

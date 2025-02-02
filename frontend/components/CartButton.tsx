@@ -33,7 +33,7 @@ export default function CartButton() {
           await initializeCart();
         }
       } catch (err: any) {
-        console.error("Failed to initialize app", err);
+        console.error("Failed to initialize cart", err);
       }
     };
 
