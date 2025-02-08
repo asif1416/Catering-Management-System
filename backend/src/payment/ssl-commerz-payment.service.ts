@@ -11,10 +11,9 @@ import { Order } from 'src/order/order.entity';
 export class SSLCommerzPayment extends PaymentService {
   constructor(
     @Inject(PAYMENT_CONFIG) config: PaymentConfig,
-    @InjectRepository(Payment) paymentRepository: Repository<Payment>, 
-    @InjectRepository(Order) orderRepository: Repository<Order>, 
-    
+    @InjectRepository(Payment) paymentRepository: Repository<Payment>,
+    @InjectRepository(Order) orderRepository: Repository<Order>,
   ) {
-    super(config, paymentRepository, orderRepository); 
+    super(paymentRepository, orderRepository);
   }
 }

@@ -1,12 +1,12 @@
-import { Order } from 'src/order/order.entity';
 import {
-  Entity,
   Column,
-  PrimaryGeneratedColumn,
   CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { Order } from 'src/order/order.entity';
 
 @Entity()
 export class Payment {
@@ -16,7 +16,7 @@ export class Payment {
   @Column()
   tran_id: string;
 
-  @Column()
+  @Column({ nullable: true })
   total_amount: number;
 
   @Column()
@@ -31,7 +31,7 @@ export class Payment {
   @Column({ nullable: true })
   cardIssuer: string;
 
-  @Column({ nullable: true }) 
+  @Column({ nullable: true })
   customerName: string;
 
   @Column({ nullable: true })
@@ -43,7 +43,7 @@ export class Payment {
   @CreateDateColumn({ type: 'timestamp' })
   createdAt: Date;
 
-  // @ManyToOne(() => Order, (order) => order.payments, { onDelete: 'CASCADE' })
-  // @JoinColumn({ name: 'order_id' })
-  // order: Order;
+  @ManyToOne(() => Order, (order) => order.payments)
+  @JoinColumn({ name: 'order_id' }) 
+  order: Order;
 }

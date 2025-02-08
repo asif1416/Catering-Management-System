@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Customer } from 'src/customer/customer.entity';
 import { OrderItem } from './orderItem.entity';
+import { Payment } from 'src/payment/payment.entity';
 
 @Entity()
 export class Order {
@@ -20,6 +21,9 @@ export class Order {
 
   @OneToMany(() => OrderItem, (orderItem) => orderItem.order, { cascade: true })
   items: OrderItem[];
+
+  @OneToMany(() => Payment, (payment) => payment.order, { cascade: true })
+  payments: Payment[];
 
   @Column()
   totalPrice: number;

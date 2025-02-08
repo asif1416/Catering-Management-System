@@ -18,7 +18,7 @@ import { Order } from 'src/order/order.entity';
       username: 'postgres',
       password: 'root',
       database: 'catering',
-      entities: [Payment],
+      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
       synchronize: true,
     }),
     ConfigModule.forRoot({
@@ -38,7 +38,6 @@ import { Order } from 'src/order/order.entity';
     },
     PaymentService,
     SSLCommerzPayment,
-    
   ],
 })
 export class PaymentModule {}

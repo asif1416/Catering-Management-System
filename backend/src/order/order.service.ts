@@ -191,4 +191,24 @@ export class OrderService {
       relations: ['items', 'items.menuItem'],
     });
   }
+
+  async getOrderDetails(orderId: number) {
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId },
+      relations: ['customer'],
+    });
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    return {
+      cus_id: order.customer.id,
+      cus_name: order.customer.name,
+      total_amount: order.totalPrice,
+      cus_email: order.customer.email,
+      cus_add1: order.customer.address,
+      cus_phone: order.customer.phone,
+    };
+  }
 }

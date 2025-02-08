@@ -6,7 +6,8 @@ import { Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
-
+import { config } from 'dotenv';
+config(); 
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

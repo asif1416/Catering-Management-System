@@ -9,6 +9,11 @@ import { CartModule } from './cart/cart.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { PaymentModule } from './payment/payment.module';
 import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Order } from './order/order.entity';
+import { Payment } from './payment/payment.entity';
+import { Customer } from './customer/customer.entity';
+import { OrderItem } from './order/orderItem.entity';
 
 @Module({
   imports: [
@@ -28,7 +33,7 @@ import { ConfigModule } from '@nestjs/config';
       },
     }),
     ConfigModule.forRoot({
-      isGlobal: true, 
+      isGlobal: true,
     }),
   ],
   controllers: [AppController],

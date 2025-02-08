@@ -44,29 +44,32 @@ export class OrderController {
   }
 
   @Patch('/cancel')
-async cancelOrder(
-  @Req() request: any,
-  @Body() { orderId }: { orderId: number },
-) {
-  const token =
-    request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
-  if (!token) {
-    throw new NotFoundException('Token not found');
-  }
-
-  try {
-    const order = await this.orderService.cancelOrder(token, orderId);
-    return {
-      message: 'Order cancelled successfully',
-      order,
-    };
-  } catch (error) {
-    if (error instanceof NotFoundException || error instanceof BadRequestException) {
-      throw error;
+  async cancelOrder(
+    @Req() request: any,
+    @Body() { orderId }: { orderId: number },
+  ) {
+    const token =
+      request.headers['authorization']?.split(' ')[1] || request.cookies?.jwt;
+    if (!token) {
+      throw new NotFoundException('Token not found');
     }
-    throw new InternalServerErrorException('Failed to cancel order');
+
+    try {
+      const order = await this.orderService.cancelOrder(token, orderId);
+      return {
+        message: 'Order cancelled successfully',
+        order,
+      };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to cancel order');
+    }
   }
-}
 
   @Get('/')
   async getAllOrders(@Req() request: any) {
@@ -79,4 +82,8 @@ async cancelOrder(
     return this.orderService.getOrders(token);
   }
 
+  @Get(':id/details')
+  async getOrderDetails(@Param('id') orderId: number) {
+    return this.orderService.getOrderDetails(orderId);
+  }
 }
