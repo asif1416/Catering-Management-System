@@ -24,7 +24,7 @@ async function bootstrap() {
   });
   app.use(helmet());
   app.use(cookieParser());
-  await app.listen(process.env.POR, '0.0.0.0');
+  await app.listen(process.env.PORT, '0.0.0.0');
 }
 
 bootstrap();
