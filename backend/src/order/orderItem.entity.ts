@@ -27,4 +27,3 @@ export class OrderItem {
   @Column()
   totalPrice: number;
 }
-

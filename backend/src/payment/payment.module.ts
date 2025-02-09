@@ -7,19 +7,21 @@ import { PAYMENT_CONFIG } from './payment.constants';
 import { Payment } from './payment.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Order } from 'src/order/order.entity';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, Order]),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'root',
-      database: 'catering',
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
       synchronize: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
     ConfigModule.forRoot({
       isGlobal: true,

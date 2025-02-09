@@ -6,22 +6,23 @@ import { Customer } from '../customer/customer.entity';
 import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth.constants';
 import { CustomerModule } from '../customer/customer.module';
-import { AuthGuard } from './auth.guard'; 
-import { Reflector } from '@nestjs/core'; 
-import { MailerModule } from '@nestjs-modules/mailer';
+import { AuthGuard } from './auth.guard';
+import { Reflector } from '@nestjs/core';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Customer]),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: 'root',
-      database: 'catering',
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
       synchronize: true,
-      
+      ssl: {
+        rejectUnauthorized: false,
+      },
     }),
     CustomerModule,
     JwtModule.register({

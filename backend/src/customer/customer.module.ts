@@ -4,22 +4,24 @@ import { Customer } from './customer.entity';
 import { CustomerController } from './customer.controller';
 import { CustomerService } from './customer.service';
 import { Order } from 'src/order/order.entity';
+import * as dotenv from 'dotenv';
 
+dotenv.config();
 @Module({
-  imports: [TypeOrmModule.forFeature([Customer, Order]),
-  TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: 'root',
-
-    database: 'catering',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: true,
-  }),], 
-  controllers: [ CustomerController], 
-  providers: [CustomerService], 
+  imports: [
+    TypeOrmModule.forFeature([Customer, Order]),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
+      synchronize: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    }),
+  ],
+  controllers: [CustomerController],
+  providers: [CustomerService],
   exports: [CustomerService],
 })
 export class CustomerModule {}

@@ -6,21 +6,25 @@ import { Cart } from './cart.entity';
 import { CartItem } from './cartItem.entity';
 import { Customer } from 'src/customer/customer.entity';
 import { Menu } from 'src/menu/menu.entity';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Cart, CartItem, Customer, Menu]),
-  TypeOrmModule.forRoot({
-    type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    username: 'postgres',
-    password: 'root',
-    database: 'catering',
-    entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-    synchronize: true,
-  }),], 
-  controllers: [CartController], 
-  providers: [CartService], 
+  imports: [
+    TypeOrmModule.forFeature([Cart, CartItem, Customer, Menu]),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      url: process.env.DATABASE_URL,
+      autoLoadEntities: true,
+      synchronize: true,
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    }),
+  ],
+  controllers: [CartController],
+  providers: [CartService],
   exports: [CartModule],
 })
 export class CartModule {}
