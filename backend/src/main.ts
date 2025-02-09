@@ -1,13 +1,13 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AuthGuard } from './auth/auth.guard';
 import { JwtService } from '@nestjs/jwt';
-import { Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import * as cookieParser from 'cookie-parser';
 import { config } from 'dotenv';
-config(); 
+
+config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -19,11 +19,12 @@ async function bootstrap() {
   app.useGlobalGuards(new AuthGuard(jwtService, reflector));
 
   app.enableCors({
-    origin: 'http://localhost:3001', 
-    credentials: true, 
+    origin: 'http://localhost:3001',
+    credentials: true,
   });
   app.use(helmet());
   app.use(cookieParser());
-  await app.listen(process.env.PORT ?? 3000);
+  await app.listen(process.env.POR, '0.0.0.0');
 }
+
 bootstrap();
